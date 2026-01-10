@@ -2467,6 +2467,121 @@
             { id: 'medical_exam', name: 'Medical Examination (I-693)', type: 'medical', status: 'missing', date: null, size: null }
         ];
 
+        // ============ INDEXEDDB FILE STORAGE ============
+        // Using IndexedDB to store actual file content for view/download/delete
+        const FileStorage = {
+            dbName: 'VisaGuideFileStorage',
+            dbVersion: 1,
+            storeName: 'documents',
+            db: null,
+            
+            init: function() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.dbVersion);
+                    
+                    request.onerror = () => {
+                        console.error('IndexedDB error:', request.error);
+                        reject(request.error);
+                    };
+                    
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve(this.db);
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(this.storeName)) {
+                            db.createObjectStore(this.storeName, { keyPath: 'docId' });
+                        }
+                    };
+                });
+            },
+            
+            saveFile: function(docId, file, docName) {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) {
+                        reject(new Error('Database not initialized'));
+                        return;
+                    }
+                    
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    
+                    const fileData = {
+                        docId: docId,
+                        docName: docName,
+                        fileName: file.name,
+                        fileType: file.type,
+                        fileSize: file.size,
+                        lastModified: file.lastModified,
+                        uploadedAt: new Date().toISOString(),
+                        fileData: file
+                    };
+                    
+                    const request = store.put(fileData);
+                    
+                    request.onsuccess = () => resolve(fileData);
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            
+            getFile: function(docId) {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) {
+                        reject(new Error('Database not initialized'));
+                        return;
+                    }
+                    
+                    const transaction = this.db.transaction([this.storeName], 'readonly');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.get(docId);
+                    
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            
+            deleteFile: function(docId) {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) {
+                        reject(new Error('Database not initialized'));
+                        return;
+                    }
+                    
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.delete(docId);
+                    
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            
+            getAllFiles: function() {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) {
+                        reject(new Error('Database not initialized'));
+                        return;
+                    }
+                    
+                    const transaction = this.db.transaction([this.storeName], 'readonly');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.getAll();
+                    
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+        };
+        
+        // Initialize file storage
+        FileStorage.init().then(() => {
+            console.log('File storage initialized');
+        }).catch(err => {
+            console.error('Failed to initialize file storage:', err);
+        });
+        
         // Load documents from localStorage or use defaults
         function loadDocumentsData() {
             const savedDocs = localStorage.getItem('documentsData');
@@ -3209,14 +3324,20 @@
                 if (file) {
                     const doc = documentsData.find(function(d) { return d.id === docId; });
                     if (doc) {
-                        doc.status = 'uploaded';
-                        doc.date = new Date().toISOString().split('T')[0];
-                        doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-                        
-                        populateDocuments();
-                        updateDocStats();
-                        saveDocumentsData();
-                        showToast(doc.name + ' uploaded successfully!', 'success');
+                        // Save file to IndexedDB
+                        FileStorage.saveFile(docId, file, doc.name).then(() => {
+                            doc.status = 'uploaded';
+                            doc.date = new Date().toISOString().split('T')[0];
+                            doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+                            
+                            populateDocuments();
+                            updateDocStats();
+                            saveDocumentsData();
+                            showToast(doc.name + ' uploaded successfully!', 'success');
+                        }).catch(err => {
+                            console.error('Error saving file:', err);
+                            showToast('Error saving file', 'error');
+                        });
                     }
                 }
             };
@@ -3226,6 +3347,76 @@
             input.remove();
         }
         
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                const file = files[0];
+                const doc = documentsData.find(function(d) { return d.status === 'missing'; });
+                
+                if (doc) {
+                    // Save file to IndexedDB
+                    FileStorage.saveFile(doc.id, file, doc.name).then(() => {
+                        doc.status = 'uploaded';
+                        doc.date = new Date().toISOString().split('T')[0];
+                        doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+                        
+                        populateDocuments();
+                        updateDocStats();
+                        saveDocumentsData();
+                        showToast(file.name + ' uploaded successfully!', 'success');
+                    }).catch(err => {
+                        console.error('Error saving file:', err);
+                        showToast('Error saving file', 'error');
+                    });
+                } else {
+                    showToast('All required documents are already uploaded!', 'warning');
+                }
+            }
+        }
+        
+        function setupDragDrop() {
+            const uploadArea = document.getElementById('docUploadArea');
+            
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    const doc = documentsData.find(function(d) { return d.status === 'missing'; });
+                    
+                    if (doc) {
+                        // Save file to IndexedDB
+                        FileStorage.saveFile(doc.id, file, doc.name).then(() => {
+                            doc.status = 'uploaded';
+                            doc.date = new Date().toISOString().split('T')[0];
+                            doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+                            
+                            populateDocuments();
+                            updateDocStats();
+                            saveDocumentsData();
+                            showToast(file.name + ' uploaded successfully!', 'success');
+                        }).catch(err => {
+                            console.error('Error saving file:', err);
+                            showToast('Error saving file', 'error');
+                        });
+                    } else {
+                        showToast('All required documents are already uploaded!', 'warning');
+                    }
+                }
+            });
+        }
         function handleFileUpload(event) {
             const files = event.target.files;
             if (files.length > 0) {
@@ -3291,28 +3482,87 @@
         }
 
         function viewDocument(docId) {
-            showToast('Opening document preview...', 'info');
+            const doc = documentsData.find(function(d) { return d.id === docId; });
+            if (!doc || doc.status !== 'uploaded') {
+                showToast('Document not found', 'error');
+                return;
+            }
+            
+            FileStorage.getFile(docId).then(function(fileData) {
+                if (fileData && fileData.fileData) {
+                    // Create a URL for the file
+                    const file = fileData.fileData;
+                    const fileURL = URL.createObjectURL(file);
+                    
+                    // Open in new tab
+                    window.open(fileURL, '_blank');
+                    showToast('Opening ' + doc.name, 'info');
+                } else {
+                    showToast('Document file not found', 'error');
+                }
+            }).catch(function(err) {
+                console.error('Error viewing document:', err);
+                showToast('Error opening document', 'error');
+            });
         }
         
         function downloadDocument(docId) {
-            showToast('Downloading document...', 'info');
+            const doc = documentsData.find(function(d) { return d.id === docId; });
+            if (!doc || doc.status !== 'uploaded') {
+                showToast('Document not found', 'error');
+                return;
+            }
+            
+            FileStorage.getFile(docId).then(function(fileData) {
+                if (fileData && fileData.fileData) {
+                    // Create a URL for the file
+                    const file = fileData.fileData;
+                    const fileURL = URL.createObjectURL(file);
+                    
+                    // Create download link
+                    const link = document.createElement('a');
+                    link.href = fileURL;
+                    link.download = fileData.fileName || doc.name + '.pdf';
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    // Clean up the URL
+                    setTimeout(() => URL.revokeObjectURL(fileURL), 100);
+                    
+                    showToast('Downloading ' + doc.name, 'success');
+                } else {
+                    showToast('Document file not found', 'error');
+                }
+            }).catch(function(err) {
+                console.error('Error downloading document:', err);
+                showToast('Error downloading document', 'error');
+            });
         }
         
         function deleteDocument(docId) {
             if (confirm('Are you sure you want to delete this document?')) {
                 const doc = documentsData.find(function(d) { return d.id === docId; });
                 if (doc) {
-                    doc.status = 'missing';
-                    doc.date = null;
-                    doc.size = null;
-                    
-                    populateDocuments();
-                    updateDocStats();
-                    saveDocumentsData();
-                    showToast('Document deleted.', 'warning');
+                    // Delete from IndexedDB
+                    FileStorage.deleteFile(docId).then(function() {
+                        doc.status = 'missing';
+                        doc.date = null;
+                        doc.size = null;
+                        
+                        populateDocuments();
+                        updateDocStats();
+                        saveDocumentsData();
+                        showToast(doc.name + ' deleted.', 'warning');
+                    }).catch(function(err) {
+                        console.error('Error deleting file:', err);
+                        showToast('Error deleting document', 'error');
+                    });
                 }
             }
         }
+
 
 
         // ============ COST CALCULATOR ============
