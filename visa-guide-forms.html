@@ -11,9 +11,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-
+    
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    
+    <!-- Auth Manager -->
+    <script src="auth-manager.js"></script>
     
     <style>
         /* ============ CSS VARIABLES ============ */
@@ -230,6 +233,9 @@
             font-weight: 800;
             color: var(--gray-900);
             margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
         [data-theme="dark"] .page-header h1 {
@@ -252,6 +258,7 @@
             margin-bottom: 2rem;
             border-bottom: 2px solid var(--gray-200);
             padding-bottom: 0;
+            overflow-x: auto;
         }
 
         [data-theme="dark"] .tabs-container {
@@ -269,6 +276,10 @@
             transition: var(--transition);
             border-bottom: 3px solid transparent;
             margin-bottom: -2px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         [data-theme="dark"] .tab-btn {
@@ -312,6 +323,8 @@
             border: 1px solid var(--gray-200);
             transition: var(--transition);
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
 
         [data-theme="dark"] .form-card {
@@ -412,6 +425,10 @@
             transition: width 0.5s ease;
         }
 
+        .progress-fill.completed {
+            background: var(--success);
+        }
+
         /* ============ INTERACTIVE FORM ============ */
         .interactive-form {
             background: var(--white);
@@ -426,7 +443,7 @@
         }
 
         .form-header {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
             padding: 1.5rem;
             display: flex;
@@ -437,6 +454,17 @@
         .form-header h2 {
             font-size: 1.25rem;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .form-progress-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-full);
+            font-size: 0.875rem;
+            font-weight: 600;
         }
 
         .form-steps {
@@ -473,6 +501,10 @@
             color: var(--gray-400);
         }
 
+        .step-indicator:hover {
+            background: var(--gray-200);
+        }
+
         .step-indicator.active {
             background: var(--primary);
             color: white;
@@ -502,6 +534,8 @@
 
         .form-body {
             padding: 2rem;
+            max-height: 600px;
+            overflow-y: auto;
         }
 
         .form-section {
@@ -520,6 +554,9 @@
             margin-bottom: 1.5rem;
             padding-bottom: 0.75rem;
             border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         [data-theme="dark"] .form-section h3 {
@@ -572,6 +609,11 @@
             box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
         }
 
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--gray-400);
+        }
+
         .form-row {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -620,6 +662,10 @@
             color: var(--gray-800);
         }
 
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
         .btn-primary {
             background: var(--primary);
             color: white;
@@ -632,6 +678,10 @@
         .btn-success {
             background: var(--success);
             color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
         }
 
         /* ============ DOCUMENT MANAGER ============ */
@@ -698,6 +748,11 @@
             background: var(--info-light);
         }
 
+        .doc-upload-area.dragover {
+            border-color: var(--primary);
+            background: var(--info-light);
+        }
+
         .doc-upload-area i {
             font-size: 3rem;
             color: var(--gray-400);
@@ -742,10 +797,19 @@
             padding: 1rem 1.5rem;
             border-bottom: 1px solid var(--gray-200);
             gap: 1rem;
+            transition: var(--transition);
         }
 
         [data-theme="dark"] .document-item {
             border-color: var(--gray-300);
+        }
+
+        .document-item:hover {
+            background: var(--gray-50);
+        }
+
+        [data-theme="dark"] .document-item:hover {
+            background: var(--gray-200);
         }
 
         .document-item:last-child {
@@ -846,6 +910,15 @@
         [data-theme="dark"] .doc-action-btn:hover {
             background: var(--gray-300);
             color: var(--gray-200);
+        }
+
+        .doc-action-btn.upload-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        .doc-action-btn.upload-btn:hover {
+            background: var(--primary-light);
         }
 
         /* ============ COST CALCULATOR ============ */
@@ -1040,6 +1113,9 @@
             font-size: 1.25rem;
             font-weight: 700;
             color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         [data-theme="dark"] .timeline-header h2 {
@@ -1204,6 +1280,101 @@
             color: white;
         }
 
+        /* ============ TOAST NOTIFICATIONS ============ */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .toast {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 1rem 1.5rem;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideInRight 0.3s ease;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        [data-theme="dark"] .toast {
+            background: var(--gray-100);
+            color: var(--gray-100);
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--info);
+        }
+
+        .toast i {
+            font-size: 1.25rem;
+        }
+
+        .toast.success i {
+            color: var(--success);
+        }
+
+        .toast.error i {
+            color: var(--danger);
+        }
+
+        .toast.warning i {
+            color: var(--warning);
+        }
+
+        .toast.info i {
+            color: var(--info);
+        }
+
+        .toast-message {
+            flex: 1;
+            font-size: 0.9375rem;
+            font-weight: 500;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--gray-400);
+            cursor: pointer;
+            padding: 0;
+            font-size: 1rem;
+        }
+
+        .toast-close:hover {
+            color: var(--gray-600);
+        }
+
         /* ============ RESPONSIVE ============ */
         @media (max-width: 768px) {
             .navbar-nav {
@@ -1221,6 +1392,20 @@
 
             .doc-stats {
                 grid-template-columns: repeat(2, 1fr);
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+
+            .toast-container {
+                left: 1rem;
+                right: 1rem;
+                bottom: 1rem;
+            }
+
+            .toast {
+                min-width: auto;
             }
         }
 
@@ -1251,7 +1436,7 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="navbar-container">
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand" href="visa-guide-dashboard.html">
                 <i class="fas fa-passport"></i>
                 Visa Guide AI
             </a>
@@ -1276,24 +1461,24 @@
     <div class="main-container">
         <div class="page-header">
             <h1><i class="fas fa-file-alt"></i> Forms Center</h1>
-            <p>Complete your immigration forms, manage documents, and calculate costs</p>
+            <p>Complete your immigration forms, manage documents, and track your progress</p>
         </div>
 
         <!-- Tabs -->
         <div class="tabs-container">
-            <button class="tab-btn active" onclick="switchTab('forms')">
+            <button class="tab-btn active" data-tab="forms" onclick="switchTab('forms')">
                 <i class="fas fa-clipboard-list"></i> My Forms
             </button>
-            <button class="tab-btn" onclick="switchTab('interactive')">
+            <button class="tab-btn" data-tab="interactive" onclick="switchTab('interactive')">
                 <i class="fas fa-edit"></i> Fill Form
             </button>
-            <button class="tab-btn" onclick="switchTab('documents')">
+            <button class="tab-btn" data-tab="documents" onclick="switchTab('documents')">
                 <i class="fas fa-folder-open"></i> Documents
             </button>
-            <button class="tab-btn" onclick="switchTab('calculator')">
+            <button class="tab-btn" data-tab="calculator" onclick="switchTab('calculator')">
                 <i class="fas fa-calculator"></i> Cost Calculator
             </button>
-            <button class="tab-btn" onclick="switchTab('timeline')">
+            <button class="tab-btn" data-tab="timeline" onclick="switchTab('timeline')">
                 <i class="fas fa-stream"></i> Timeline
             </button>
         </div>
@@ -1310,31 +1495,31 @@
             <div class="interactive-form">
                 <div class="form-header">
                     <h2><i class="fas fa-file-signature"></i> N-400 Application for Naturalization</h2>
-                    <span id="formProgress">Progress: 0%</span>
+                    <span class="form-progress-badge" id="formProgress">Progress: 0%</span>
                 </div>
                 
                 <div class="form-steps" id="formSteps">
-                    <button class="step-indicator active" onclick="goToStep(1)">
+                    <button class="step-indicator active" data-step="1" onclick="goToStep(1)">
                         <span class="step-number">1</span>
                         <span>Basic Info</span>
                     </button>
-                    <button class="step-indicator" onclick="goToStep(2)">
+                    <button class="step-indicator" data-step="2" onclick="goToStep(2)">
                         <span class="step-number">2</span>
                         <span>Eligibility</span>
                     </button>
-                    <button class="step-indicator" onclick="goToStep(3)">
+                    <button class="step-indicator" data-step="3" onclick="goToStep(3)">
                         <span class="step-number">3</span>
                         <span>Residence</span>
                     </button>
-                    <button class="step-indicator" onclick="goToStep(4)">
+                    <button class="step-indicator" data-step="4" onclick="goToStep(4)">
                         <span class="step-number">4</span>
                         <span>Employment</span>
                     </button>
-                    <button class="step-indicator" onclick="goToStep(5)">
+                    <button class="step-indicator" data-step="5" onclick="goToStep(5)">
                         <span class="step-number">5</span>
                         <span>Family</span>
                     </button>
-                    <button class="step-indicator" onclick="goToStep(6)">
+                    <button class="step-indicator" data-step="6" onclick="goToStep(6)">
                         <span class="step-number">6</span>
                         <span>Review</span>
                     </button>
@@ -1559,18 +1744,18 @@
                     <!-- Step 6: Review -->
                     <div class="form-section" id="step6">
                         <h3><i class="fas fa-check-circle"></i> Part 6 - Review Your Information</h3>
-                        <div class="cost-summary">
-                            <p style="text-align: center; color: var(--gray-600); padding: 2rem;">
+                        <div class="cost-summary" style="text-align: center;">
+                            <p style="color: var(--gray-600); padding: 2rem;">
                                 <i class="fas fa-file-signature" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary);"></i><br>
                                 Please review all information before submitting.<br>
                                 <strong>Your progress: <span id="reviewProgress">0%</span></strong>
                             </p>
                         </div>
-                        <div style="text-align: center;">
+                        <div style="text-align: center; display: flex; gap: 1rem; justify-content: center;">
                             <button class="btn btn-success" onclick="saveFormProgress()">
                                 <i class="fas fa-save"></i> Save Progress
                             </button>
-                            <button class="btn btn-primary" onclick="completeForm()" style="margin-left: 1rem;">
+                            <button class="btn btn-primary" onclick="completeForm()" style="margin-left: 0;">
                                 <i class="fas fa-check"></i> Mark as Complete
                             </button>
                         </div>
@@ -1609,7 +1794,7 @@
                 </div>
             </div>
             
-            <div class="doc-upload-area" onclick="uploadDocument()">
+            <div class="doc-upload-area" id="docUploadArea" onclick="triggerFileInput()">
                 <i class="fas fa-cloud-upload-alt"></i>
                 <h3>Upload Document</h3>
                 <p>Drag and drop files here or click to browse<br>Supported formats: PDF, JPG, PNG (max 10MB)</p>
@@ -1668,36 +1853,21 @@
                     
                     <div class="form-group">
                         <label>Additional services (optional):</label>
-                        <div class="checkbox-group" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem;">
-                            <label class="checkbox-label" style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius); cursor: pointer; transition: var(--transition);">
-                                <input type="checkbox" id="calcBiometrics" onchange="calculateCost()" style="margin-top: 0.25rem; width: 18px; height: 18px; flex-shrink: 0;">
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem;">
+                            <label style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius); cursor: pointer;">
+                                <input type="checkbox" id="calcBiometrics" onchange="calculateCost()" style="margin-top: 0.25rem; width: 18px; height: 18px;">
                                 <span style="line-height: 1.4;">Biometric services (if not included)</span>
                             </label>
-                            <label class="checkbox-label" style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius); cursor: pointer; transition: var(--transition);">
-                                <input type="checkbox" id="calcTranslation" onchange="calculateCost()" style="margin-top: 0.25rem; width: 18px; height: 18px; flex-shrink: 0;">
+                            <label style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius); cursor: pointer;">
+                                <input type="checkbox" id="calcTranslation" onchange="calculateCost()" style="margin-top: 0.25rem; width: 18px; height: 18px;">
                                 <span style="line-height: 1.4;">Document translation service (+$100)</span>
                             </label>
-                            <label class="checkbox-label" style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius); cursor: pointer; transition: var(--transition);">
-                                <input type="checkbox" id="calcNotary" onchange="calculateCost()" style="margin-top: 0.25rem; width: 18px; height: 18px; flex-shrink: 0;">
+                            <label style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius); cursor: pointer;">
+                                <input type="checkbox" id="calcNotary" onchange="calculateCost()" style="margin-top: 0.25rem; width: 18px; height: 18px;">
                                 <span style="line-height: 1.4;">Notary service (+$50)</span>
                             </label>
                         </div>
                     </div>
-                    
-                    <style>
-                        .checkbox-label:hover {
-                            background: var(--info-light) !important;
-                        }
-                        [data-theme="dark"] .checkbox-label {
-                            background: var(--gray-200) !important;
-                        }
-                        [data-theme="dark"] .checkbox-label:hover {
-                            background: var(--gray-300) !important;
-                        }
-                        .checkbox-label input[type="checkbox"] {
-                            accent-color: var(--primary);
-                        }
-                    </style>
                 </div>
                 
                 <div class="calculator-results">
@@ -1865,6 +2035,9 @@
         </div>
     </div>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <script>
         // ============ STATE ============
         let currentStep = 1;
@@ -1975,6 +2148,11 @@
             
             // Load saved form data
             loadFormData();
+            
+            // Setup drag and drop
+            setupDragDrop();
+            
+            console.log('Visa Guide AI - Forms Center initialized successfully');
         }
 
         // ============ TABS ============
@@ -2011,6 +2189,8 @@
                 if (form.status === 'in-progress') statusClass = 'status-in-progress';
                 if (form.status === 'completed') statusClass = 'status-completed';
                 
+                let progressClass = form.progress === 100 ? 'completed' : '';
+                
                 card.innerHTML = '<div class="form-card-header">' +
                     '<span class="form-number">' + form.name + '</span>' +
                     '<span class="form-status ' + statusClass + '">' + capitalizeFirst(form.status.replace('-', ' ')) + '</span>' +
@@ -2022,7 +2202,7 @@
                     '<span><i class="fas fa-clock"></i> ' + form.time + '</span>' +
                     '</div>' +
                     '<div class="progress-bar">' +
-                    '<div class="progress-fill" style="width: ' + form.progress + '%"></div>' +
+                    '<div class="progress-fill ' + progressClass + '" style="width: ' + form.progress + '%"></div>' +
                     '</div>';
                 
                 formsGrid.appendChild(card);
@@ -2031,7 +2211,7 @@
 
         function openForm(formId) {
             switchTab('interactive');
-            showToast('Opening ' + formId.toUpperCase() + ' form...');
+            showToast('Opening ' + formId.toUpperCase() + ' form...', 'info');
         }
 
         // ============ INTERACTIVE FORM ============
@@ -2058,6 +2238,10 @@
         function nextStep() {
             if (currentStep < totalSteps) {
                 goToStep(currentStep + 1);
+            } else {
+                // On last step, save and show completion
+                saveFormProgress();
+                showToast('Form review complete! You can now submit your application.', 'success');
             }
         }
 
@@ -2085,7 +2269,7 @@
             
             prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
             nextBtn.innerHTML = currentStep === totalSteps ? 
-                'Submit <i class="fas fa-paper-plane"></i>' : 
+                '<i class="fas fa-check"></i> Submit' : 
                 'Next <i class="fas fa-arrow-right"></i>';
         }
 
@@ -2147,8 +2331,22 @@
                 lastSaved: new Date().toISOString()
             };
             
+            // Save to localStorage
             localStorage.setItem('n400FormData', JSON.stringify(formData));
-            showToast('Progress saved successfully!');
+            
+            // Update N-400 form progress
+            const n400Form = formsData.find(f => f.id === 'n400');
+            if (n400Form) {
+                const completedSteps = document.querySelectorAll('.step-indicator.completed').length + 1;
+                n400Form.progress = Math.round((completedSteps / totalSteps) * 100);
+                n400Form.status = n400Form.progress === 100 ? 'completed' : 'in-progress';
+            }
+            
+            // Refresh forms display
+            document.getElementById('formsGrid').innerHTML = '';
+            populateForms();
+            
+            showToast('Progress saved successfully!', 'success');
         }
 
         function loadFormData() {
@@ -2217,7 +2415,7 @@
                     // Show last saved message
                     if (formData.lastSaved) {
                         const lastSaved = new Date(formData.lastSaved);
-                        showToast('Resumed from last save: ' + lastSaved.toLocaleDateString());
+                        showToast('Resumed from last save: ' + lastSaved.toLocaleDateString(), 'info');
                     }
                 } catch (e) {
                     console.error('Error loading form data:', e);
@@ -2227,7 +2425,7 @@
 
         function completeForm() {
             saveFormProgress();
-            showToast('Congratulations! Form N-400 marked as complete.');
+            showToast('Congratulations! Form N-400 marked as complete.', 'success');
         }
 
         // ============ DOCUMENTS ============
@@ -2261,7 +2459,7 @@
                         '</div>';
                 } else {
                     actionButtons = '<div class="document-actions">' +
-                        '<button class="doc-action-btn" title="Upload" onclick="uploadSingleDocument(' + doc.id + ')"><i class="fas fa-upload"></i></button>' +
+                        '<button class="doc-action-btn upload-btn" title="Upload" onclick="uploadSingleDocument(' + doc.id + ')"><i class="fas fa-upload"></i></button>' +
                         '</div>';
                 }
                 
@@ -2289,22 +2487,35 @@
             document.getElementById('expiredDocs').textContent = expired;
         }
 
-        function uploadDocument() {
+        function triggerFileInput() {
             document.getElementById('fileInput').click();
         }
 
         function uploadSingleDocument(docId) {
-            const doc = documentsData.find(function(d) { return d.id === docId; });
-            if (doc) {
-                // Simulate upload
-                doc.status = 'uploaded';
-                doc.date = new Date().toISOString().split('T')[0];
-                doc.size = (Math.random() * 3 + 0.5).toFixed(1) + ' MB';
-                
-                populateDocuments();
-                updateDocStats();
-                showToast(doc.name + ' uploaded successfully!');
-            }
+            // Create a temporary file input for this document
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.pdf,.jpg,.jpeg,.png';
+            input.style.display = 'none';
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const doc = documentsData.find(function(d) { return d.id === docId; });
+                    if (doc) {
+                        doc.status = 'uploaded';
+                        doc.date = new Date().toISOString().split('T')[0];
+                        doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+                        
+                        populateDocuments();
+                        updateDocStats();
+                        saveDocumentsData();
+                        showToast(doc.name + ' uploaded successfully!', 'success');
+                    }
+                }
+            };
+            document.body.appendChild(input);
+            input.click();
+            input.remove();
         }
 
         function handleFileUpload(event) {
@@ -2321,19 +2532,62 @@
                     
                     populateDocuments();
                     updateDocStats();
-                    showToast(file.name + ' uploaded successfully!');
+                    saveDocumentsData();
+                    showToast(file.name + ' uploaded successfully!', 'success');
                 } else {
-                    showToast('All required documents are already uploaded!');
+                    showToast('All required documents are already uploaded!', 'warning');
                 }
             }
         }
 
+        function setupDragDrop() {
+            const uploadArea = document.getElementById('docUploadArea');
+            
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    const doc = documentsData.find(function(d) { return d.status === 'missing'; });
+                    
+                    if (doc) {
+                        doc.status = 'uploaded';
+                        doc.date = new Date().toISOString().split('T')[0];
+                        doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+                        
+                        populateDocuments();
+                        updateDocStats();
+                        saveDocumentsData();
+                        showToast(file.name + ' uploaded successfully!', 'success');
+                    } else {
+                        showToast('All required documents are already uploaded!', 'warning');
+                    }
+                }
+            });
+        }
+
+        function saveDocumentsData() {
+            localStorage.setItem('documentsData', JSON.stringify(documentsData));
+        }
+
         function viewDocument(docId) {
-            showToast('Opening document preview...');
+            showToast('Opening document preview...', 'info');
         }
 
         function downloadDocument(docId) {
-            showToast('Downloading document...');
+            showToast('Downloading document...', 'info');
         }
 
         function deleteDocument(docId) {
@@ -2346,7 +2600,8 @@
                     
                     populateDocuments();
                     updateDocStats();
-                    showToast('Document deleted.');
+                    saveDocumentsData();
+                    showToast('Document deleted.', 'warning');
                 }
             }
         }
@@ -2439,23 +2694,38 @@
             return icons[type] || 'alt';
         }
 
-        function showToast(message) {
-            alert(message);
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            
+            const icons = {
+                'success': 'fas fa-check-circle',
+                'error': 'fas fa-exclamation-circle',
+                'warning': 'fas fa-exclamation-triangle',
+                'info': 'fas fa-info-circle'
+            };
+            
+            toast.innerHTML = '<i class="' + icons[type] + '"></i>' +
+                '<span class="toast-message">' + message + '</span>' +
+                '<button class="toast-close" onclick="this.parentElement.remove()">' +
+                '<i class="fas fa-times"></i></button>';
+            
+            container.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(function() {
+                if (toast.parentElement) {
+                    toast.style.animation = 'fadeOut 0.3s ease forwards';
+                    setTimeout(function() {
+                        toast.remove();
+                    }, 300);
+                }
+            }, 5000);
         }
 
         console.log('Visa Guide AI - Forms Center loaded successfully');
         console.log('Features: Interactive Forms, Document Manager, Cost Calculator, Timeline');
-        
-        // Initialize Firebase
-        if (typeof FirebaseCore !== 'undefined') {
-            FirebaseCore.initialize(firebaseConfig);
-            console.log('Firebase integration ready');
-            
-            // Initialize Data Sync for forms
-            if (typeof DataSync !== 'undefined') {
-                window.dataSync = new DataSync();
-            }
-        }
     </script>
 </body>
 </html>
