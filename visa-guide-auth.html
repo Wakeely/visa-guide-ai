@@ -960,6 +960,19 @@
         // ============ LOGIN HANDLER ============
         async function handleLogin(event) {
             event.preventDefault();
+            async function handleLogin(event) {
+    event.preventDefault();
+    
+    // CHECK IF ALREADY LOGGED IN
+    if (window.authManager.isLoggedIn()) {
+        console.log('User already logged in, redirecting to dashboard...');
+        window.location.href = 'visa-guide-dashboard.html';
+        return;
+    }
+    
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    // ... rest of the function
             
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
