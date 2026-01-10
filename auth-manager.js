@@ -173,17 +173,23 @@ class AuthManager {
                 throw { code: 'auth/passwords-mismatch', message: 'Passwords do not match' };
             }
             
-            // Create user account
+            // Create user account (Firebase Auth)
             const result = await FirebaseCore.signUp(email, password);
+            console.log('Firebase Auth account created successfully:', result.user.email);
             
-            // Create user profile in Firestore
-            await this._createUserProfile(result.user.uid, {
-                email: email,
-                firstName: firstName || email.split('@')[0],
-                displayName: firstName || email.split('@')[0]
-            });
+            // Try to create user profile in Firestore (best effort)
+            try {
+                await this._createUserProfile(result.user.uid, {
+                    email: email,
+                    firstName: firstName || email.split('@')[0],
+                    displayName: firstName || email.split('@')[0]
+                });
+                console.log('User profile created in Firestore');
+            } catch (profileError) {
+                // Profile creation failed, but account was created - that's OK!
+                console.warn('Could not create user profile in Firestore (will create on first login):', profileError.message);
+            }
             
-            showToast('Account created successfully! Welcome to Visa Guide AI!');
             return { success: true, user: result.user };
             
         } catch (error) {
@@ -264,10 +270,12 @@ class AuthManager {
                 lastUpdated: new Date().toISOString()
             };
             
-            await FirebaseCore.addDocument(`users/${uid}`, userData);
-            console.log('User profile created successfully');
+            // Use updateDocument to create/update user profile at correct path
+            await FirebaseCore.updateDocument(`users/${uid}`, userData);
+            console.log('User profile created successfully at users/' + uid);
         } catch (error) {
-            console.error('Error creating user profile:', error);
+            console.warn('Could not create user profile in Firestore:', error.message);
+            // This is OK - profile can be created later
         }
     }
     
