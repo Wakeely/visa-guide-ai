@@ -1,0 +1,2362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Visa Guide AI Dashboard - Your Personal Immigration Command Center">
+    <title>Visa Guide AI - My Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <style>
+        /* ============ CSS VARIABLES ============ */
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary: #6366f1;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --info: #0ea5e9;
+            --info-light: #e0f2fe;
+            
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            --white: #ffffff;
+            --black: #000000;
+            
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            
+            --radius: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --gray-50: #0f172a;
+            --gray-100: #1e293b;
+            --gray-200: #334155;
+            --gray-300: #475569;
+            --gray-400: #64748b;
+            --gray-500: #94a3b8;
+            --gray-600: #cbd5e1;
+            --gray-700: #e2e8f0;
+            --gray-800: #f1f5f9;
+            --gray-900: #f8fafc;
+            --white: #0f172a;
+            --black: #ffffff;
+            --success-light: #064e3b;
+            --warning-light: #78350f;
+            --danger-light: #7f1d1d;
+            --info-light: #0c4a6e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] body {
+            background-color: var(--gray-900);
+            color: var(--gray-200);
+        }
+
+        /* ============ NAVIGATION ============ */
+        .navbar {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .navbar {
+            background: var(--gray-100);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.375rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand i {
+            font-size: 1.625rem;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            color: var(--gray-600);
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 0.9375rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        [data-theme="dark"] .nav-link {
+            color: var(--gray-400);
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary);
+            background: var(--gray-100);
+            text-decoration: none;
+        }
+
+        [data-theme="dark"] .nav-link:hover, [data-theme="dark"] .nav-link.active {
+            background: var(--gray-200);
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: var(--gray-100);
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+        }
+
+        [data-theme="dark"] .notification-btn {
+            background: var(--gray-200);
+            color: var(--gray-400);
+        }
+
+        .notification-btn:hover {
+            background: var(--gray-200);
+            color: var(--gray-800);
+        }
+
+        [data-theme="dark"] .notification-btn:hover {
+            background: var(--gray-300);
+            color: var(--gray-200);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 18px;
+            height: 18px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .user-menu:hover {
+            background: var(--gray-100);
+        }
+
+        [data-theme="dark"] .user-menu:hover {
+            background: var(--gray-200);
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9375rem;
+        }
+
+        .user-info {
+            text-align: left;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--gray-800);
+            font-size: 0.875rem;
+        }
+
+        [data-theme="dark"] .user-name {
+            color: var(--gray-200);
+        }
+
+        .user-plan {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        [data-theme="dark"] .user-plan {
+            color: var(--gray-400);
+        }
+
+        .dropdown-arrow {
+            color: var(--gray-400);
+            font-size: 0.75rem;
+            margin-left: 0.25rem;
+        }
+
+        /* ============ USER DROPDOWN ============ */
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 1.5rem;
+            margin-top: 0.5rem;
+            width: 260px;
+            background: var(--white);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+
+        [data-theme="dark"] .user-dropdown {
+            background: var(--gray-100);
+            border-color: var(--gray-300);
+        }
+
+        .user-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-header {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .dropdown-user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .dropdown-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .dropdown-user-name {
+            font-weight: 600;
+            color: var(--gray-800);
+            font-size: 0.875rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        [data-theme="dark"] .dropdown-user-name {
+            color: var(--gray-200);
+        }
+
+        .dropdown-user-email {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        [data-theme="dark"] .dropdown-user-email {
+            color: var(--gray-400);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--gray-200);
+            margin: 0.25rem 0;
+        }
+
+        [data-theme="dark"] .dropdown-divider {
+            background: var(--gray-300);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--gray-700);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        [data-theme="dark"] .dropdown-item {
+            color: var(--gray-300);
+        }
+
+        .dropdown-item:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+        }
+
+        [data-theme="dark"] .dropdown-item:hover {
+            background: var(--gray-200);
+            color: var(--primary);
+        }
+
+        .dropdown-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .dropdown-item.logout {
+            color: var(--danger);
+        }
+
+        .dropdown-item.logout:hover {
+            background: var(--danger-light);
+        }
+
+        [data-theme="dark"] .dropdown-item.logout:hover {
+            background: var(--danger-light);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius);
+            border: none;
+            background: var(--gray-100);
+            color: var(--gray-600);
+            cursor: pointer;
+            font-size: 1.25rem;
+        }
+
+        /* ============ MAIN LAYOUT ============ */
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: calc(100vh - 70px);
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar {
+            background: var(--white);
+            border-right: 1px solid var(--gray-200);
+            padding: 1.5rem;
+            position: sticky;
+            top: 70px;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .sidebar {
+            background: var(--gray-100);
+            border-color: var(--gray-300);
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gray-400);
+            margin-bottom: 0.75rem;
+            padding: 0 0.75rem;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            color: var(--gray-600);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .sidebar-nav-link {
+            color: var(--gray-400);
+        }
+
+        .sidebar-nav-link:hover, .sidebar-nav-link.active {
+            background: var(--gray-100);
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        [data-theme="dark"] .sidebar-nav-link:hover, [data-theme="dark"] .sidebar-nav-link.active {
+            background: var(--gray-200);
+        }
+
+        .sidebar-nav-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.0625rem;
+        }
+
+        .progress-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            color: white;
+            margin-top: 1rem;
+        }
+
+        .progress-card h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .progress-percentage {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-label {
+            font-size: 0.8125rem;
+            opacity: 0.85;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .main-content {
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        [data-theme="dark"] .page-title {
+            color: var(--gray-100);
+        }
+
+        .page-subtitle {
+            color: var(--gray-500);
+            font-size: 0.9375rem;
+        }
+
+        [data-theme="dark"] .page-subtitle {
+            color: var(--gray-400);
+        }
+
+        /* ============ WELCOME BANNER ============ */
+        .welcome-banner {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            color: white;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 60%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .welcome-banner-content {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+        }
+
+        .welcome-banner h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-banner p {
+            opacity: 0.9;
+            margin-bottom: 1.25rem;
+            font-size: 0.9375rem;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-white {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-white:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-outline-white {
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+        }
+
+        .btn-outline-white:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: white;
+        }
+
+        /* ============ STATS CARDS ============ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .stat-card {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .stat-icon.blue { background: var(--info-light); color: var(--info); }
+        .stat-icon.green { background: var(--success-light); color: var(--success); }
+        .stat-icon.yellow { background: var(--warning-light); color: var(--warning); }
+        .stat-icon.red { background: var(--danger-light); color: var(--danger); }
+        .stat-icon.purple { background: #f3e8ff; color: #7c3aed; }
+        [data-theme="dark"] .stat-icon.purple { background: #4c1d95; color: #c4b5fd; }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius);
+        }
+
+        .stat-trend.up {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        [data-theme="dark"] .stat-trend.up {
+            background: var(--success);
+            color: white;
+        }
+
+        .stat-trend.down {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        [data-theme="dark"] .stat-trend.down {
+            background: var(--danger);
+            color: white;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            line-height: 1.2;
+            margin-bottom: 0.25rem;
+        }
+
+        [data-theme="dark"] .stat-value {
+            color: var(--gray-100);
+        }
+
+        .stat-label {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+        }
+
+        [data-theme="dark"] .stat-label {
+            color: var(--gray-400);
+        }
+
+        /* ============ IMMIGRATION ROADMAP ============ */
+        .roadmap-section {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            margin-bottom: 2rem;
+        }
+
+        [data-theme="dark"] .roadmap-section {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        [data-theme="dark"] .section-title {
+            color: var(--gray-100);
+        }
+
+        .section-action {
+            color: var(--primary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .section-action:hover {
+            text-decoration: underline;
+        }
+
+        .roadmap-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .roadmap-timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--gray-200);
+        }
+
+        [data-theme="dark"] .roadmap-timeline::before {
+            background: var(--gray-300);
+        }
+
+        .roadmap-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .roadmap-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .roadmap-marker {
+            position: absolute;
+            left: -2rem;
+            top: 0.25rem;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 3px solid var(--gray-300);
+            z-index: 1;
+        }
+
+        [data-theme="dark"] .roadmap-marker {
+            background: var(--gray-100);
+        }
+
+        .roadmap-item.completed .roadmap-marker {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .roadmap-item.current .roadmap-marker {
+            background: var(--primary);
+            border-color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(30, 64, 175, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(30, 64, 175, 0); }
+        }
+
+        .roadmap-item.pending .roadmap-marker {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+        }
+
+        [data-theme="dark"] .roadmap-item.pending .roadmap-marker {
+            background: var(--gray-300);
+            border-color: var(--gray-400);
+        }
+
+        .roadmap-content {
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            border-left: 3px solid var(--gray-300);
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .roadmap-content {
+            background: var(--gray-200);
+            border-color: var(--gray-400);
+        }
+
+        .roadmap-item.completed .roadmap-content {
+            border-left-color: var(--success);
+        }
+
+        .roadmap-item.current .roadmap-content {
+            border-left-color: var(--primary);
+            background: var(--info-light);
+        }
+
+        [data-theme="dark"] .roadmap-item.current .roadmap-content {
+            background: var(--info);
+        }
+
+        .roadmap-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        [data-theme="dark"] .roadmap-title {
+            color: var(--gray-100);
+        }
+
+        .roadmap-meta {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        [data-theme="dark"] .roadmap-meta {
+            color: var(--gray-400);
+        }
+
+        .roadmap-meta i {
+            color: var(--gray-400);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.625rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.completed {
+            background: var(--success-light);
+            color: #059669;
+        }
+
+        [data-theme="dark"] .status-badge.completed {
+            background: #064e3b;
+            color: #6ee7b7;
+        }
+
+        .status-badge.current {
+            background: var(--info-light);
+            color: #0284c7;
+        }
+
+        [data-theme="dark"] .status-badge.current {
+            background: #0c4a6e;
+            color: #7dd3fc;
+        }
+
+        .status-badge.pending {
+            background: var(--gray-200);
+            color: var(--gray-600);
+        }
+
+        [data-theme="dark"] .status-badge.pending {
+            background: var(--gray-600);
+            color: var(--gray-300);
+        }
+
+        /* ============ UPCOMING DEADLINES ============ */
+        .deadlines-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .deadline-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .deadline-card {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .deadline-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .deadline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .deadline-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+        }
+
+        .deadline-urgent {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        [data-theme="dark"] .deadline-urgent {
+            background: var(--danger);
+            color: white;
+        }
+
+        .deadline-soon {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        [data-theme="dark"] .deadline-soon {
+            background: var(--warning);
+            color: white;
+        }
+
+        .deadline-normal {
+            background: var(--info-light);
+            color: var(--info);
+        }
+
+        [data-theme="dark"] .deadline-normal {
+            background: var(--info);
+            color: white;
+        }
+
+        .deadline-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+        }
+
+        [data-theme="dark"] .deadline-title {
+            color: var(--gray-100);
+        }
+
+        .deadline-date {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            margin-bottom: 0.75rem;
+        }
+
+        [data-theme="dark"] .deadline-date {
+            color: var(--gray-400);
+        }
+
+        .deadline-action {
+            font-size: 0.8125rem;
+            color: var(--primary);
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            transition: var(--transition);
+        }
+
+        .deadline-action:hover {
+            text-decoration: underline;
+        }
+
+        /* ============ QUICK ACTIONS ============ */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .quick-action {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+
+        [data-theme="dark"] .quick-action {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .quick-action:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+            text-decoration: none;
+        }
+
+        .quick-action-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin: 0 auto 0.75rem;
+        }
+
+        .quick-action-label {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        [data-theme="dark"] .quick-action-label {
+            color: var(--gray-100);
+        }
+
+        .quick-action-desc {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        [data-theme="dark"] .quick-action-desc {
+            color: var(--gray-400);
+        }
+
+        /* ============ RECENT ACTIVITY ============ */
+        .activity-list {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .activity-list {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        [data-theme="dark"] .activity-item {
+            border-color: var(--gray-200);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.success {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        [data-theme="dark"] .activity-icon.success {
+            background: #064e3b;
+            color: #6ee7b7;
+        }
+
+        .activity-icon.info {
+            background: var(--info-light);
+            color: var(--info);
+        }
+
+        [data-theme="dark"] .activity-icon.info {
+            background: #0c4a6e;
+            color: #7dd3fc;
+        }
+
+        .activity-icon.warning {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        [data-theme="dark"] .activity-icon.warning {
+            background: #78350f;
+            color: #fcd34d;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            color: var(--gray-900);
+            margin-bottom: 0.125rem;
+            font-size: 0.9375rem;
+        }
+
+        [data-theme="dark"] .activity-title {
+            color: var(--gray-100);
+        }
+
+        .activity-time {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+        }
+
+        [data-theme="dark"] .activity-time {
+            color: var(--gray-400);
+        }
+
+        /* ============ THEME TOGGLE ============ */
+        .theme-toggle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--gray-100);
+            border: none;
+            color: var(--gray-600);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: var(--gray-200);
+            color: var(--gray-400);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .deadlines-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .main-content {
+                padding: 1.5rem;
+            }
+
+            .welcome-banner {
+                padding: 1.5rem;
+            }
+
+            .welcome-banner h2 {
+                font-size: 1.25rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-container {
+                padding: 0 1rem;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+        }
+
+        /* ============ NOTIFICATIONS PANEL ============ */
+        .notifications-panel {
+            position: fixed;
+            top: 70px;
+            right: 1rem;
+            width: 380px;
+            max-height: calc(100vh - 90px);
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+            z-index: 100;
+            display: none;
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .notifications-panel {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .notifications-panel.active {
+            display: block;
+            animation: slideDown 0.2s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notifications-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        [data-theme="dark"] .notifications-header {
+            border-color: var(--gray-300);
+        }
+
+        .notifications-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        [data-theme="dark"] .notifications-header h3 {
+            color: var(--gray-100);
+        }
+
+        .notifications-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--gray-100);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .notification-item {
+            border-color: var(--gray-200);
+        }
+
+        .notification-item:hover {
+            background: var(--gray-50);
+        }
+
+        [data-theme="dark"] .notification-item:hover {
+            background: var(--gray-200);
+        }
+
+        .notification-item.unread {
+            background: var(--info-light);
+        }
+
+        [data-theme="dark"] .notification-item.unread {
+            background: var(--info);
+        }
+
+        .notification-item.unread .notification-text {
+            color: var(--gray-900);
+        }
+
+        [data-theme="dark"] .notification-item.unread .notification-text {
+            color: var(--gray-100);
+        }
+
+        .notification-text {
+            font-size: 0.875rem;
+            color: var(--gray-700);
+            margin-bottom: 0.25rem;
+        }
+
+        [data-theme="dark"] .notification-text {
+            color: var(--gray-300);
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        [data-theme="dark"] .notification-time {
+            color: var(--gray-400);
+        }
+
+        .notifications-footer {
+            padding: 1rem;
+            text-align: center;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .notifications-footer {
+            border-color: var(--gray-300);
+        }
+
+        .mark-all-read {
+            color: var(--primary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .mark-all-read:hover {
+            text-decoration: underline;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 40;
+            display: none;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* Upgrade banner */
+        .upgrade-banner {
+            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .upgrade-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .upgrade-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.2);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .upgrade-text h4 {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .upgrade-text p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .upgrade-btn {
+            background: white;
+            color: #7c3aed;
+            padding: 0.625rem 1.25rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            white-space: nowrap;
+        }
+
+        .upgrade-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-passport"></i>
+                Visa Guide Ai
+            </a>
+            
+            <ul class="navbar-nav">
+                <li><a href="#" class="nav-link active"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="#" class="nav-link"><i class="fas fa-road"></i> My Roadmap</a></li>
+                <li><a href="#" class="nav-link"><i class="fas fa-file-alt"></i> Forms</a></li>
+                <li><a href="#" class="nav-link"><i class="fas fa-comments"></i> Interview</a></li>
+                <li><a href="#" class="nav-link"><i class="fas fa-book"></i> Resources</a></li>
+            </ul>
+            
+            <div class="navbar-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                
+                <div style="position: relative;">
+                    <button class="notification-btn" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                    
+                    <div class="notifications-panel" id="notificationsPanel">
+                        <div class="notifications-header">
+                            <h3>Notifications</h3>
+                            <span style="font-size: 0.75rem; color: var(--gray-500); cursor: pointer;" onclick="clearAllNotifications()">Clear all</span>
+                        </div>
+                        <div class="notifications-list">
+                            <div class="notification-item unread" onclick="markAsRead(this)">
+                                <div class="notification-text"><strong>Deadline Alert:</strong> I-485 response due in 5 days</div>
+                                <div class="notification-time">2 hours ago</div>
+                            </div>
+                            <div class="notification-item unread" onclick="markAsRead(this)">
+                                <div class="notification-text"><strong>Priority Date Update:</strong> EB-3 India moved to Jan 2020</div>
+                                <div class="notification-time">Yesterday</div>
+                            </div>
+                            <div class="notification-item unread" onclick="markAsRead(this)">
+                                <div class="notification-text"><strong>Document Reminder:</strong> Upload your latest pay stub</div>
+                                <div class="notification-time">2 days ago</div>
+                            </div>
+                        </div>
+                        <div class="notifications-footer">
+                            <span class="mark-all-read" onclick="markAllAsRead()">Mark all as read</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="user-menu" onclick="toggleUserMenu()">
+                    <div class="user-avatar">JD</div>
+                    <div class="user-info">
+                        <div class="user-name">John Doe</div>
+                        <div class="user-plan">Free Plan</div>
+                    </div>
+                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                </div>
+                
+                <!-- User Dropdown Menu -->
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="dropdown-header">
+                        <div class="dropdown-user-avatar">JD</div>
+                        <div class="dropdown-user-info">
+                            <div class="dropdown-user-name">John Doe</div>
+                            <div class="dropdown-user-email">john@example.com</div>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item" onclick="openProfile(); return false;">
+                        <i class="fas fa-user"></i>
+                        <span>My Profile</span>
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="openSettings(); return false;">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="openBilling(); return false;">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Billing</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item logout" onclick="logout(); return false;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+                
+                <button class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay" onclick="closeAllPanels()"></div>
+
+    <!-- Dashboard Layout -->
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="progress-card">
+                    <h4>Overall Progress</h4>
+                    <div class="progress-percentage">45%</div>
+                    <div class="progress-label">4 of 9 steps completed</div>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">Tools & Resources</div>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-nav-item">
+                        <a href="visa-guide-chatbot.html" class="sidebar-nav-link">
+                            <i class="fas fa-robot"></i> AI Assistant
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="visa-guide-forms.html" class="sidebar-nav-link">
+                            <i class="fas fa-file-signature"></i> Forms Center
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="visa-guide-civics.html" class="sidebar-nav-link">
+                            <i class="fas fa-graduation-cap"></i> Civics Prep
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="#" class="sidebar-nav-link active">
+                            <i class="fas fa-home"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="#" class="sidebar-nav-link">
+                            <i class="fas fa-road"></i> My Roadmap
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="#" class="sidebar-nav-link">
+                            <i class="fas fa-tasks"></i> Task List
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="#" class="sidebar-nav-link">
+                            <i class="fas fa-file-alt"></i> My Documents
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="#" class="sidebar-nav-link">
+                            <i class="fas fa-calendar-alt"></i> Calendar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">My Visa Type</div>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-nav-item">
+                        <a href="#" class="sidebar-nav-link">
+                            <i class="fas fa-briefcase"></i> EB-3 Employment
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="#" class="sidebar-nav-link">
+                            <i class="fas fa-flag"></i> From: India
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="#" class="sidebar-nav-link">
+                            <i class="fas fa-calendar"></i> Priority Date: Mar 2019
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">Account</div>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-nav-item">
+                        <a href="#" class="sidebar-nav-link">
+                            <i class="fas fa-user-cog"></i> Settings
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="#" class="sidebar-nav-link">
+                            <i class="fas fa-credit-card"></i> Billing
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="#" class="sidebar-nav-link" onclick="logout(); return false;">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Welcome back, John!</h1>
+                <p class="page-subtitle">Here's an overview of your immigration journey</p>
+            </div>
+
+            <!-- Upgrade Banner -->
+            <div class="upgrade-banner">
+                <div class="upgrade-content">
+                    <div class="upgrade-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="upgrade-text">
+                        <h4>Upgrade to Pro for Priority Processing</h4>
+                        <p>Get AI document review, unlimited mock interviews, and deadline alerts</p>
+                    </div>
+                </div>
+                <button class="upgrade-btn" onclick="upgradePlan()">
+                    <i class="fas fa-rocket"></i> Upgrade Now
+                </button>
+            </div>
+
+            <!-- Welcome Banner -->
+            <div class="welcome-banner">
+                <div class="welcome-banner-content">
+                    <h2>You're on the right track! 🛫</h2>
+                    <p>Your priority date is Mar 2019. Based on current Visa Bulletin predictions, you may be eligible to file I-485 by Q3 2025. Keep your documents ready!</p>
+                    <div class="welcome-actions">
+                        <a href="#" class="btn btn-white">
+                            <i class="fas fa-road"></i> View Roadmap
+                        </a>
+                        <a href="#" class="btn btn-outline-white">
+                            <i class="fas fa-file-check"></i> Check Documents
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-trend up">
+                            <i class="fas fa-arrow-up"></i> On Track
+                        </div>
+                    </div>
+                    <div class="stat-value">4/9</div>
+                    <div class="stat-label">Steps Completed</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon yellow">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-trend down">
+                            <i class="fas fa-arrow-down"></i> 5 days
+                        </div>
+                    </div>
+                    <div class="stat-value">Dec 15</div>
+                    <div class="stat-label">Next Deadline</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon green">
+                            <i class="fas fa-file"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">12/15</div>
+                    <div class="stat-label">Documents Ready</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">18 mo</div>
+                    <div class="stat-label">Since Priority Date</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <a href="#" class="quick-action">
+                    <div class="quick-action-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="quick-action-label">Eligibility Check</div>
+                    <div class="quick-action-desc">Update your status</div>
+                </a>
+                <a href="#" class="quick-action">
+                    <div class="quick-action-icon">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
+                    <div class="quick-action-label">Upload Documents</div>
+                    <div class="quick-action-desc">3 remaining this month</div>
+                </a>
+                <a href="#" class="quick-action">
+                    <div class="quick-action-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="quick-action-label">Mock Interview</div>
+                    <div class="quick-action-desc">2 sessions available</div>
+                </a>
+                <a href="#" class="quick-action">
+                    <div class="quick-action-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="quick-action-label">Civics Practice</div>
+                    <div class="quick-action-desc">10 questions today</div>
+                </a>
+            </div>
+
+            <!-- Immigration Roadmap -->
+            <div class="roadmap-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fas fa-road" style="margin-right: 0.5rem; color: var(--primary);"></i>
+                        Your Immigration Roadmap
+                    </h3>
+                    <span class="section-action" onclick="viewFullRoadmap()">View Full Timeline →</span>
+                </div>
+                
+                <div class="roadmap-timeline">
+                    <div class="roadmap-item completed">
+                        <div class="roadmap-marker"></div>
+                        <div class="roadmap-content">
+                            <div class="roadmap-title">
+                                <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                                Labor Certification (PERM)
+                            </div>
+                            <div class="roadmap-meta">
+                                <span><i class="fas fa-calendar"></i> Completed: Jan 2023</span>
+                                <span class="status-badge completed"><i class="fas fa-check"></i> Approved</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="roadmap-item completed">
+                        <div class="roadmap-marker"></div>
+                        <div class="roadmap-content">
+                            <div class="roadmap-title">
+                                <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                                I-140 Petition Filed
+                            </div>
+                            <div class="roadmap-meta">
+                                <span><i class="fas fa-calendar"></i> Completed: Mar 2023</span>
+                                <span class="status-badge completed"><i class="fas fa-check"></i> Approved</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="roadmap-item current">
+                        <div class="roadmap-marker"></div>
+                        <div class="roadmap-content">
+                            <div class="roadmap-title">
+                                <i class="fas fa-hourglass-half" style="color: var(--info);"></i>
+                                Waiting for Priority Date
+                            </div>
+                            <div class="roadmap-meta">
+                                <span><i class="fas fa-calendar"></i> Current PD: Mar 2019</span>
+                                <span class="status-badge current"><i class="fas fa-spinner fa-spin"></i> In Progress</span>
+                                <span><i class="fas fa-clock"></i> Est. filing: Q3 2025</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="roadmap-item pending">
+                        <div class="roadmap-marker"></div>
+                        <div class="roadmap-content">
+                            <div class="roadmap-title">
+                                <i class="fas fa-clock" style="color: var(--gray-400);"></i>
+                                File I-485 Adjustment of Status
+                            </div>
+                            <div class="roadmap-meta">
+                                <span><i class="fas fa-calendar"></i> Not started</span>
+                                <span class="status-badge pending"><i class="fas fa-lock"></i> Locked</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="roadmap-item pending">
+                        <div class="roadmap-marker"></div>
+                        <div class="roadmap-content">
+                            <div class="roadmap-title">
+                                <i class="fas fa-clock" style="color: var(--gray-400);"></i>
+                                Biometrics Appointment
+                            </div>
+                            <div class="roadmap-meta">
+                                <span><i class="fas fa-calendar"></i> Not started</span>
+                                <span class="status-badge pending"><i class="fas fa-lock"></i> Locked</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="roadmap-item pending">
+                        <div class="roadmap-marker"></div>
+                        <div class="roadmap-content">
+                            <div class="roadmap-title">
+                                <i class="fas fa-clock" style="color: var(--gray-400);"></i>
+                                Interview (if required)
+                            </div>
+                            <div class="roadmap-meta">
+                                <span><i class="fas fa-calendar"></i> Not started</span>
+                                <span class="status-badge pending"><i class="fas fa-lock"></i> Locked</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Deadlines -->
+            <div style="margin-bottom: 2rem;">
+                <h3 class="section-title" style="margin-bottom: 1rem;">
+                    <i class="fas fa-exclamation-circle" style="margin-right: 0.5rem; color: var(--warning);"></i>
+                    Upcoming Deadlines
+                </h3>
+                <div class="deadlines-grid">
+                    <div class="deadline-card">
+                        <div class="deadline-header">
+                            <div class="deadline-icon deadline-urgent">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <span class="status-badge" style="background: var(--danger-light); color: var(--danger);">
+                                <i class="fas fa-exclamation-circle"></i> Urgent
+                            </span>
+                        </div>
+                        <div class="deadline-title">Submit I-485 Response</div>
+                        <div class="deadline-date">
+                            <i class="fas fa-calendar-alt"></i>
+                            Due: December 15, 2024 (5 days)
+                        </div>
+                        <div class="deadline-action">
+                            <i class="fas fa-arrow-right"></i> Take Action Now
+                        </div>
+                    </div>
+                    
+                    <div class="deadline-card">
+                        <div class="deadline-header">
+                            <div class="deadline-icon deadline-soon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <span class="status-badge" style="background: var(--warning-light); color: var(--warning);">
+                                <i class="fas fa-hourglass-half"></i> Soon
+                            </span>
+                        </div>
+                        <div class="deadline-title">Renew Employment Letter</div>
+                        <div class="deadline-date">
+                            <i class="fas fa-calendar-alt"></i>
+                            Due: January 5, 2025 (26 days)
+                        </div>
+                        <div class="deadline-action">
+                            <i class="fas fa-arrow-right"></i> Update Document
+                        </div>
+                    </div>
+                    
+                    <div class="deadline-card">
+                        <div class="deadline-header">
+                            <div class="deadline-icon deadline-normal">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <span class="status-badge" style="background: var(--info-light); color: var(--info);">
+                                <i class="fas fa-check"></i> Planned
+                            </span>
+                        </div>
+                        <div class="deadline-title">Check Visa Bulletin</div>
+                        <div class="deadline-date">
+                            <i class="fas fa-calendar-alt"></i>
+                            Next update: January 10, 2025
+                        </div>
+                        <div class="deadline-action">
+                            <i class="fas fa-arrow-right"></i> View Predictions
+                        </div>
+                    </div>
+                    
+                    <div class="deadline-card">
+                        <div class="deadline-header">
+                            <div class="deadline-icon deadline-normal">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <span class="status-badge" style="background: var(--info-light); color: var(--info);">
+                                <i class="fas fa-check"></i> Preparation
+                            </span>
+                        </div>
+                        <div class="deadline-title">Civics Test Prep</div>
+                        <div class="deadline-date">
+                            <i class="fas fa-calendar-alt"></i>
+                            Ongoing preparation
+                        </div>
+                        <div class="deadline-action">
+                            <i class="fas fa-arrow-right"></i> Start Practice
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="activity-list">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fas fa-history" style="margin-right: 0.5rem; color: var(--primary);"></i>
+                        Recent Activity
+                    </h3>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon success">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Uploaded latest pay stubs (Oct-Nov 2024)</div>
+                        <div class="activity-time">Today at 10:30 AM</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon info">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Received notification: Priority date update for EB-3 India</div>
+                        <div class="activity-time">Yesterday at 3:45 PM</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Completed mock interview session (H-1B stamping)</div>
+                        <div class="activity-time">December 5, 2024 at 2:15 PM</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Document expiring soon: Passport (March 2025)</div>
+                        <div class="activity-time">December 3, 2024 at 9:00 AM</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon info">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Studied 15 civics questions - Score: 80%</div>
+                        <div class="activity-time">December 1, 2024 at 8:30 PM</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ============ THEME MANAGEMENT ============
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            const icon = document.getElementById('themeIcon');
+            icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        });
+
+        // ============ NOTIFICATIONS ============
+        let notificationsOpen = false;
+
+        function toggleNotifications() {
+            const panel = document.getElementById('notificationsPanel');
+            const overlay = document.getElementById('overlay');
+            
+            if (notificationsOpen) {
+                panel.classList.remove('active');
+                overlay.classList.remove('active');
+            } else {
+                panel.classList.add('active');
+                overlay.classList.add('active');
+            }
+            
+            notificationsOpen = !notificationsOpen;
+        }
+
+        function closeAllPanels() {
+            document.getElementById('notificationsPanel').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+            notificationsOpen = false;
+        }
+
+        function markAsRead(element) {
+            element.classList.remove('unread');
+            updateNotificationBadge();
+        }
+
+        function markAllAsRead() {
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.classList.remove('unread');
+            });
+            updateNotificationBadge();
+        }
+
+        function clearAllNotifications() {
+            document.querySelector('.notifications-list').innerHTML = `
+                <div style="padding: 2rem; text-align: center; color: var(--gray-500);">
+                    <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                    <p>No notifications</p>
+                </div>
+            `;
+            updateNotificationBadge();
+        }
+
+        function updateNotificationBadge() {
+            const unread = document.querySelectorAll('.notification-item.unread').length;
+            const badge = document.querySelector('.notification-badge');
+            badge.textContent = unread;
+            badge.style.display = unread > 0 ? 'flex' : 'none';
+        }
+
+        // ============ USER MENU ============
+        let userMenuOpen = false;
+
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userDropdown');
+            userMenuOpen = !userMenuOpen;
+            
+            if (userMenuOpen) {
+                dropdown.classList.add('active');
+                updateDropdownUserInfo();
+            } else {
+                dropdown.classList.remove('active');
+            }
+        }
+
+        function updateDropdownUserInfo() {
+            const userData = localStorage.getItem('userData');
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    const initials = (user.firstName?.[0] || 'J') + (user.lastName?.[0] || 'D');
+                    const email = user.email || 'user@example.com';
+                    const firstName = user.firstName || 'John';
+                    const lastName = user.lastName || 'Doe';
+                    
+                    // Update dropdown elements
+                    const dropdownAvatar = document.querySelector('.dropdown-user-avatar');
+                    const dropdownName = document.querySelector('.dropdown-user-name');
+                    const dropdownEmail = document.querySelector('.dropdown-user-email');
+                    const mainAvatar = document.querySelector('.user-avatar');
+                    const mainName = document.querySelector('.user-name');
+                    
+                    if (dropdownAvatar) dropdownAvatar.textContent = initials;
+                    if (dropdownName) dropdownName.textContent = `${firstName} ${lastName}`;
+                    if (dropdownEmail) dropdownEmail.textContent = email;
+                    if (mainAvatar) mainAvatar.textContent = initials;
+                    if (mainName) mainName.textContent = `${firstName} ${lastName}`;
+                } catch (e) {
+                    console.error('Error updating user info:', e);
+                }
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('userDropdown');
+            const userMenu = document.querySelector('.user-menu');
+            
+            if (userMenuOpen && dropdown && userMenu) {
+                if (!dropdown.contains(e.target) && !userMenu.contains(e.target)) {
+                    dropdown.classList.remove('active');
+                    userMenuOpen = false;
+                }
+            }
+        });
+
+        // ============ NAVIGATION FUNCTIONS ============
+        function openProfile() {
+            // Close dropdown
+            document.getElementById('userDropdown').classList.remove('active');
+            userMenuOpen = false;
+            
+            // Show profile section (in production, would navigate to profile page)
+            alert('Profile Page\n\nIn production, this would navigate to:\n- Personal information\n- Immigration history\n- Account details\n- Document uploads');
+        }
+
+        function openSettings() {
+            // Close dropdown
+            document.getElementById('userDropdown').classList.remove('active');
+            userMenuOpen = false;
+            
+            // Show settings section (in production, would navigate to settings page)
+            alert('Settings Page\n\nIn production, this would navigate to:\n- Notification preferences\n- Privacy settings\n- Security options\n- Language settings');
+        }
+
+        function openBilling() {
+            // Close dropdown
+            document.getElementById('userDropdown').classList.remove('active');
+            userMenuOpen = false;
+            
+            // Show billing section (in production, would navigate to billing page)
+            alert('Billing & Subscription\n\nIn production, this would navigate to:\n- Current plan details\n- Payment methods\n- Billing history\n- Upgrade options');
+        }
+
+        // ============ LOGOUT ============
+        function logout() {
+            // Clear session data
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userData');
+            localStorage.removeItem('rememberMe');
+            
+            // Redirect to landing page
+            window.location.href = 'index.html';
+        }
+
+        // ============ ROADMAP ACTIONS ============
+        function viewFullRoadmap() {
+            alert('Demo: This would open a detailed, interactive timeline view with all milestones, dependencies, and action items.');
+        }
+
+        // ============ UPGRADE PLAN ============
+        function upgradePlan() {
+            alert('Demo: This would open the pricing/upgrade modal where users can choose between Pro ($29/month) and Premium ($99 one-time) plans.');
+        }
+
+        // ============ CLOSE ON ESCAPE ============
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeAllPanels();
+            }
+        });
+
+        // ============ SESSION VERIFICATION ============
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is logged in
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const userData = localStorage.getItem('userData');
+            
+            if (!isLoggedIn || isLoggedIn !== 'true') {
+                // User not logged in, redirect to auth page
+                window.location.href = 'visa-guide-auth.html';
+                return;
+            }
+            
+            // User is logged in, personalize the dashboard
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    personalizeDashboard(user);
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
+                }
+            }
+        });
+
+        function personalizeDashboard(user) {
+            // Personalize welcome message
+            const welcomeTitle = document.querySelector('.page-title');
+            if (welcomeTitle) {
+                const firstName = user.firstName || user.email.split('@')[0];
+                welcomeTitle.textContent = `Welcome back, ${firstName}!`;
+            }
+            
+            // Personalize user name in navbar
+            const userNameElement = document.querySelector('.user-name');
+            if (userNameElement) {
+                const firstName = user.firstName || 'User';
+                userNameElement.textContent = firstName;
+            }
+            
+            // Store user interest for future use
+            if (user.interest) {
+                localStorage.setItem('userInterest', user.interest);
+            }
+        }
+
+        // ============ SMOOTH SCROLL ============
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        console.log('Visa Guide AI - Dashboard Module loaded successfully');
+        console.log('Module: User Dashboard v1.0');
+        
+        // Initialize Firebase
+        if (typeof FirebaseCore !== 'undefined') {
+            FirebaseCore.initialize(firebaseConfig);
+            console.log('Firebase integration ready');
+            
+            // Initialize Auth Manager and Data Sync
+            if (typeof AuthManager !== 'undefined') {
+                window.authManager = new AuthManager();
+            }
+            if (typeof DataSync !== 'undefined') {
+                window.dataSync = new DataSync();
+            }
+        }
+    </script>
+</body>
+</html>

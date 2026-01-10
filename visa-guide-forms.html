@@ -1,0 +1,2458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Visa Guide AI - Interactive Forms, Document Management & Cost Calculator">
+    <title>Visa Guide AI - Forms Center</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <style>
+        /* ============ CSS VARIABLES ============ */
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary: #6366f1;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --info: #0ea5e9;
+            --info-light: #e0f2fe;
+            
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            --white: #ffffff;
+            --black: #000000;
+            
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            
+            --radius: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --radius-full: 9999px;
+            
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --gray-50: #0f172a;
+            --gray-100: #1e293b;
+            --gray-200: #334155;
+            --gray-300: #475569;
+            --gray-400: #64748b;
+            --gray-500: #94a3b8;
+            --gray-600: #cbd5e1;
+            --gray-700: #e2e8f0;
+            --gray-800: #f1f5f9;
+            --gray-900: #f8fafc;
+            --white: #0f172a;
+            --black: #ffffff;
+            --success-light: #064e3b;
+            --warning-light: #78350f;
+            --danger-light: #7f1d1d;
+            --info-light: #0c4a6e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] body {
+            background-color: var(--gray-900);
+            color: var(--gray-200);
+        }
+
+        /* ============ NAVIGATION ============ */
+        .navbar {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .navbar {
+            background: var(--gray-100);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.375rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand i {
+            font-size: 1.625rem;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            color: var(--gray-600);
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 0.9375rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        [data-theme="dark"] .nav-link {
+            color: var(--gray-400);
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary);
+            background: var(--gray-100);
+            text-decoration: none;
+        }
+
+        [data-theme="dark"] .nav-link:hover, [data-theme="dark"] .nav-link.active {
+            background: var(--gray-200);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        [data-theme="dark"] .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            background: var(--gray-100);
+            border: none;
+            color: var(--gray-600);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: var(--gray-200);
+            color: var(--gray-400);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* ============ MAIN LAYOUT ============ */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        [data-theme="dark"] .page-header h1 {
+            color: var(--gray-100);
+        }
+
+        .page-header p {
+            color: var(--gray-600);
+            font-size: 1rem;
+        }
+
+        [data-theme="dark"] .page-header p {
+            color: var(--gray-400);
+        }
+
+        /* ============ TABS ============ */
+        .tabs-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--gray-200);
+            padding-bottom: 0;
+        }
+
+        [data-theme="dark"] .tabs-container {
+            border-color: var(--gray-700);
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--gray-600);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        [data-theme="dark"] .tab-btn {
+            color: var(--gray-400);
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============ FORM CARDS ============ */
+        .forms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            border: 1px solid var(--gray-200);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        [data-theme="dark"] .form-card {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .form-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .form-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .form-number {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--white);
+            background: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-full);
+        }
+
+        .form-status {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-full);
+        }
+
+        .status-not-started {
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        .status-in-progress {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .status-completed {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .form-card h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        [data-theme="dark"] .form-card h3 {
+            color: var(--gray-100);
+        }
+
+        .form-card p {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 1rem;
+        }
+
+        [data-theme="dark"] .form-card p {
+            color: var(--gray-400);
+        }
+
+        .form-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+        }
+
+        .form-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--gray-200);
+            border-radius: 3px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        /* ============ INTERACTIVE FORM ============ */
+        .interactive-form {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .interactive-form {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .form-header {
+            background: var(--primary);
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .form-steps {
+            display: flex;
+            background: var(--gray-100);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            gap: 0.5rem;
+            overflow-x: auto;
+        }
+
+        [data-theme="dark"] .form-steps {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+        }
+
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-600);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        [data-theme="dark"] .step-indicator {
+            color: var(--gray-400);
+        }
+
+        .step-indicator.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .step-indicator.completed {
+            background: var(--success);
+            color: white;
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--gray-300);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .step-indicator.active .step-number,
+        .step-indicator.completed .step-number {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .form-body {
+            padding: 2rem;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .form-section h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .form-section h3 {
+            color: var(--gray-100);
+            border-color: var(--gray-300);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+        }
+
+        [data-theme="dark"] .form-group label {
+            color: var(--gray-300);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            font-size: 0.9375rem;
+            color: var(--gray-800);
+            background: var(--white);
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .form-group input,
+        [data-theme="dark"] .form-group select,
+        [data-theme="dark"] .form-group textarea {
+            background: var(--gray-200);
+            border-color: var(--gray-400);
+            color: var(--gray-100);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            padding: 1.5rem 2rem;
+            background: var(--gray-50);
+            border-top: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .form-actions {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        [data-theme="dark"] .btn-secondary {
+            background: var(--gray-300);
+            color: var(--gray-800);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        /* ============ DOCUMENT MANAGER ============ */
+        .doc-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .doc-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .doc-stat-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            border: 1px solid var(--gray-200);
+            text-align: center;
+        }
+
+        [data-theme="dark"] .doc-stat-card {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .doc-stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .doc-stat-label {
+            font-size: 0.8125rem;
+            color: var(--gray-600);
+            margin-top: 0.25rem;
+        }
+
+        [data-theme="dark"] .doc-stat-label {
+            color: var(--gray-400);
+        }
+
+        .doc-upload-area {
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            text-align: center;
+            background: var(--gray-50);
+            margin-bottom: 2rem;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        [data-theme="dark"] .doc-upload-area {
+            background: var(--gray-200);
+            border-color: var(--gray-400);
+        }
+
+        .doc-upload-area:hover {
+            border-color: var(--primary);
+            background: var(--info-light);
+        }
+
+        .doc-upload-area i {
+            font-size: 3rem;
+            color: var(--gray-400);
+            margin-bottom: 1rem;
+        }
+
+        .doc-upload-area h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+
+        [data-theme="dark"] .doc-upload-area h3 {
+            color: var(--gray-100);
+        }
+
+        .doc-upload-area p {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        [data-theme="dark"] .doc-upload-area p {
+            color: var(--gray-400);
+        }
+
+        .document-list {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .document-list {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            gap: 1rem;
+        }
+
+        [data-theme="dark"] .document-item {
+            border-color: var(--gray-300);
+        }
+
+        .document-item:last-child {
+            border-bottom: none;
+        }
+
+        .document-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            background: var(--info-light);
+            color: var(--info);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        [data-theme="dark"] .document-icon {
+            background: var(--info);
+            color: white;
+        }
+
+        .document-info {
+            flex: 1;
+        }
+
+        .document-name {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+
+        [data-theme="dark"] .document-name {
+            color: var(--gray-100);
+        }
+
+        .document-meta {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+        }
+
+        [data-theme="dark"] .document-meta {
+            color: var(--gray-400);
+        }
+
+        .document-status {
+            padding: 0.375rem 0.75rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .doc-status-uploaded {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .doc-status-missing {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .doc-status-expired {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .document-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .doc-action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius);
+            border: none;
+            background: var(--gray-100);
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        [data-theme="dark"] .doc-action-btn {
+            background: var(--gray-200);
+            color: var(--gray-400);
+        }
+
+        .doc-action-btn:hover {
+            background: var(--gray-200);
+            color: var(--gray-800);
+        }
+
+        [data-theme="dark"] .doc-action-btn:hover {
+            background: var(--gray-300);
+            color: var(--gray-200);
+        }
+
+        /* ============ COST CALCULATOR ============ */
+        .calculator-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .calculator-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .calculator-form {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .calculator-form {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .calculator-form h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .calculator-form h3 {
+            color: var(--gray-100);
+            border-color: var(--gray-300);
+        }
+
+        .calculator-results {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            border: 1px solid var(--gray-200);
+            position: sticky;
+            top: 90px;
+        }
+
+        [data-theme="dark"] .calculator-results {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .calculator-results h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1.5rem;
+        }
+
+        [data-theme="dark"] .calculator-results h3 {
+            color: var(--gray-100);
+        }
+
+        .cost-summary {
+            background: var(--gray-50);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        [data-theme="dark"] .cost-summary {
+            background: var(--gray-200);
+        }
+
+        .cost-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .cost-row {
+            border-color: var(--gray-300);
+        }
+
+        .cost-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: var(--primary);
+        }
+
+        [data-theme="dark"] .cost-row:last-child {
+            color: var(--primary-light);
+        }
+
+        .cost-label {
+            color: var(--gray-600);
+        }
+
+        [data-theme="dark"] .cost-label {
+            color: var(--gray-400);
+        }
+
+        .cost-value {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        [data-theme="dark"] .cost-value {
+            color: var(--gray-100);
+        }
+
+        .total-cost {
+            text-align: center;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: var(--radius);
+            color: white;
+            margin-bottom: 1.5rem;
+        }
+
+        .total-cost h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .total-cost .amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .cost-breakdown {
+            background: var(--gray-50);
+            border-radius: var(--radius);
+            padding: 1rem;
+        }
+
+        [data-theme="dark"] .cost-breakdown {
+            background: var(--gray-200);
+        }
+
+        .breakdown-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.75rem;
+        }
+
+        [data-theme="dark"] .breakdown-title {
+            color: var(--gray-300);
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8125rem;
+            padding: 0.5rem 0;
+            color: var(--gray-600);
+        }
+
+        [data-theme="dark"] .breakdown-item {
+            color: var(--gray-400);
+        }
+
+        /* ============ TIMELINE SECTION ============ */
+        .timeline-container {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .timeline-container {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .timeline-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        [data-theme="dark"] .timeline-header h2 {
+            color: var(--gray-100);
+        }
+
+        .timeline-progress {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .timeline-progress-item {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--gray-300);
+        }
+
+        [data-theme="dark"] .timeline-progress-item {
+            background: var(--gray-500);
+        }
+
+        .timeline-progress-item.completed {
+            background: var(--success);
+        }
+
+        .timeline-progress-item.current {
+            background: var(--primary);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.2);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--gray-300);
+        }
+
+        [data-theme="dark"] .timeline::before {
+            background: var(--gray-500);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+            opacity: 0.6;
+        }
+
+        .timeline-item.completed {
+            opacity: 1;
+        }
+
+        .timeline-item.current {
+            opacity: 1;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -2rem;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--gray-300);
+            border: 3px solid var(--white);
+        }
+
+        [data-theme="dark"] .timeline-marker {
+            border-color: var(--gray-100);
+        }
+
+        .timeline-item.completed .timeline-marker {
+            background: var(--success);
+        }
+
+        .timeline-item.current .timeline-marker {
+            background: var(--primary);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.2);
+        }
+
+        .timeline-content {
+            background: var(--gray-50);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .timeline-content {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+        }
+
+        .timeline-item.completed .timeline-content {
+            border-color: var(--success);
+            background: var(--success-light);
+        }
+
+        .timeline-item.current .timeline-content {
+            border-color: var(--primary);
+            background: var(--info-light);
+        }
+
+        .timeline-title {
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+
+        [data-theme="dark"] .timeline-title {
+            color: var(--gray-100);
+        }
+
+        .timeline-date {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+            margin-bottom: 0.5rem;
+        }
+
+        [data-theme="dark"] .timeline-date {
+            color: var(--gray-400);
+        }
+
+        .timeline-desc {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        [data-theme="dark"] .timeline-desc {
+            color: var(--gray-300);
+        }
+
+        .timeline-action {
+            margin-top: 0.75rem;
+        }
+
+        .timeline-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.8125rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .timeline-btn {
+            color: var(--primary-light);
+            border-color: var(--primary-light);
+        }
+
+        .timeline-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .tabs-container {
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+
+            .tab-btn {
+                white-space: nowrap;
+            }
+
+            .doc-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* ============ SCROLLBAR ============ */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 3px;
+        }
+
+        [data-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: var(--gray-500);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-passport"></i>
+                Visa Guide AI
+            </a>
+            
+            <ul class="navbar-nav">
+                <li><a href="visa-guide-dashboard.html" class="nav-link"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="#" class="nav-link"><i class="fas fa-road"></i> Roadmap</a></li>
+                <li><a href="visa-guide-forms.html" class="nav-link active"><i class="fas fa-file-alt"></i> Forms</a></li>
+                <li><a href="visa-guide-chatbot.html" class="nav-link"><i class="fas fa-comments"></i> Chat</a></li>
+                <li><a href="#" class="nav-link"><i class="fas fa-book"></i> Resources</a></li>
+            </ul>
+            
+            <div class="navbar-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="page-header">
+            <h1><i class="fas fa-file-alt"></i> Forms Center</h1>
+            <p>Complete your immigration forms, manage documents, and calculate costs</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="switchTab('forms')">
+                <i class="fas fa-clipboard-list"></i> My Forms
+            </button>
+            <button class="tab-btn" onclick="switchTab('interactive')">
+                <i class="fas fa-edit"></i> Fill Form
+            </button>
+            <button class="tab-btn" onclick="switchTab('documents')">
+                <i class="fas fa-folder-open"></i> Documents
+            </button>
+            <button class="tab-btn" onclick="switchTab('calculator')">
+                <i class="fas fa-calculator"></i> Cost Calculator
+            </button>
+            <button class="tab-btn" onclick="switchTab('timeline')">
+                <i class="fas fa-stream"></i> Timeline
+            </button>
+        </div>
+
+        <!-- FORMS TAB -->
+        <div id="forms-tab" class="tab-content active">
+            <div class="forms-grid" id="formsGrid">
+                <!-- Forms will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- INTERACTIVE FORM TAB -->
+        <div id="interactive-tab" class="tab-content">
+            <div class="interactive-form">
+                <div class="form-header">
+                    <h2><i class="fas fa-file-signature"></i> N-400 Application for Naturalization</h2>
+                    <span id="formProgress">Progress: 0%</span>
+                </div>
+                
+                <div class="form-steps" id="formSteps">
+                    <button class="step-indicator active" onclick="goToStep(1)">
+                        <span class="step-number">1</span>
+                        <span>Basic Info</span>
+                    </button>
+                    <button class="step-indicator" onclick="goToStep(2)">
+                        <span class="step-number">2</span>
+                        <span>Eligibility</span>
+                    </button>
+                    <button class="step-indicator" onclick="goToStep(3)">
+                        <span class="step-number">3</span>
+                        <span>Residence</span>
+                    </button>
+                    <button class="step-indicator" onclick="goToStep(4)">
+                        <span class="step-number">4</span>
+                        <span>Employment</span>
+                    </button>
+                    <button class="step-indicator" onclick="goToStep(5)">
+                        <span class="step-number">5</span>
+                        <span>Family</span>
+                    </button>
+                    <button class="step-indicator" onclick="goToStep(6)">
+                        <span class="step-number">6</span>
+                        <span>Review</span>
+                    </button>
+                </div>
+                
+                <div class="form-body">
+                    <!-- Step 1: Basic Information -->
+                    <div class="form-section active" id="step1">
+                        <h3><i class="fas fa-user"></i> Part 1 - Basic Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Legal Name - Family Name / Last Name *</label>
+                                <input type="text" id="lastName" placeholder="Enter your last name">
+                            </div>
+                            <div class="form-group">
+                                <label>Given Name / First Name *</label>
+                                <input type="text" id="firstName" placeholder="Enter your first name">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Middle Name (if any)</label>
+                                <input type="text" id="middleName" placeholder="Enter middle name">
+                            </div>
+                            <div class="form-group">
+                                <label>Date of Birth *</label>
+                                <input type="date" id="dob">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Country of Birth *</label>
+                                <select id="birthCountry">
+                                    <option value="">Select country</option>
+                                    <option value="India">India</option>
+                                    <option value="China">China</option>
+                                    <option value="Mexico">Mexico</option>
+                                    <option value="Philippines">Philippines</option>
+                                    <option value="Vietnam">Vietnam</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Country of Nationality *</label>
+                                <select id="nationality">
+                                    <option value="">Select country</option>
+                                    <option value="India">India</option>
+                                    <option value="China">China</option>
+                                    <option value="Mexico">Mexico</option>
+                                    <option value="Philippines">Philippines</option>
+                                    <option value="Vietnam">Vietnam</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Alien Registration Number (A-Number) if available</label>
+                            <input type="text" id="aNumber" placeholder="XXX-XXX-XXX">
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2: Eligibility -->
+                    <div class="form-section" id="step2">
+                        <h3><i class="fas fa-clipboard-check"></i> Part 2 - Eligibility</h3>
+                        <div class="form-group">
+                            <label>I am applying for naturalization because (select one): *</label>
+                            <select id="eligibilityBasis">
+                                <option value="">Select basis</option>
+                                <option value="5years">I have been a lawful permanent resident for at least 5 years</option>
+                                <option value="3years">I have been a lawful permanent resident for at least 3 years and am married to a U.S. citizen</option>
+                                <option value="uscis">I am a U.S. citizen through parents and applying for naturalization</option>
+                                <option value="military">I am applying under the military provisions</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Have you ever been a member of, or in any way associated with, any Communist or other totalitarian party? *</label>
+                            <select id="communistParty">
+                                <option value="">Select</option>
+                                <option value="no">No</option>
+                                <option value="yes">Yes</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Have you ever been charged with a crime? *</label>
+                            <select id="criminalCharges">
+                                <option value="">Select</option>
+                                <option value="no">No</option>
+                                <option value="yes">Yes</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>If "Yes" to above, provide details:</label>
+                            <textarea id="criminalDetails" rows="3" placeholder="Provide details of any arrests or charges"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3: Residence -->
+                    <div class="form-section" id="step3">
+                        <h3><i class="fas fa-home"></i> Part 3 - Residence</h3>
+                        <div class="form-group">
+                            <label>Current Physical Address - Street Number and Name *</label>
+                            <input type="text" id="currentAddress" placeholder="Enter street address">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>City *</label>
+                                <input type="text" id="currentCity" placeholder="City">
+                            </div>
+                            <div class="form-group">
+                                <label>State *</label>
+                                <select id="currentState">
+                                    <option value="">Select state</option>
+                                    <option value="CA">California</option>
+                                    <option value="NY">New York</option>
+                                    <option value="TX">Texas</option>
+                                    <option value="FL">Florida</option>
+                                    <option value="IL">Illinois</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>ZIP Code *</label>
+                                <input type="text" id="currentZip" placeholder="XXXXX">
+                            </div>
+                            <div class="form-group">
+                                <label>County *</label>
+                                <input type="text" id="currentCounty" placeholder="County">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Arrival in the U.S. (if applicable)</label>
+                            <input type="date" id="arrivalDate">
+                        </div>
+                        <div class="form-group">
+                            <label>List all countries where you have lived during the past 5 years:</label>
+                            <textarea id="countriesLived" rows="3" placeholder="List countries, cities, and dates"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 4: Employment -->
+                    <div class="form-section" id="step4">
+                        <h3><i class="fas fa-briefcase"></i> Part 4 - Employment</h3>
+                        <div class="form-group">
+                            <label>Current Employer (or "None" if unemployed)</label>
+                            <input type="text" id="employer" placeholder="Employer name">
+                        </div>
+                        <div class="form-group">
+                            <label>Occupation/Job Title</label>
+                            <input type="text" id="occupation" placeholder="Your job title">
+                        </div>
+                        <div class="form-group">
+                            <label>Employer Address</label>
+                            <input type="text" id="employerAddress" placeholder="Street address">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Start Date</label>
+                                <input type="date" id="employerStartDate">
+                            </div>
+                            <div class="form-group">
+                                <label>End Date (or "Present")</label>
+                                <input type="text" id="employerEndDate" placeholder="Present">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>List your employment for the past 5 years (include self-employment):</label>
+                            <textarea id="employmentHistory" rows="4" placeholder="List employer, address, position, and dates"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 5: Family -->
+                    <div class="form-section" id="step5">
+                        <h3><i class="fas fa-users"></i> Part 5 - Family Information</h3>
+                        <div class="form-group">
+                            <label>Marital Status *</label>
+                            <select id="maritalStatus">
+                                <option value="">Select status</option>
+                                <option value="single">Single (never married)</option>
+                                <option value="married">Married</option>
+                                <option value="divorced">Divorced</option>
+                                <option value="widowed">Widowed</option>
+                                <option value="separated">Legally Separated</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Spouse Full Name (if applicable)</label>
+                            <input type="text" id="spouseName" placeholder="Spouse's legal name">
+                        </div>
+                        <div class="form-group">
+                            <label>Spouse Date of Birth (if applicable)</label>
+                            <input type="date" id="spouseDob">
+                        </div>
+                        <div class="form-group">
+                            <label>Spouse Country of Birth (if applicable)</label>
+                            <select id="spouseBirthCountry">
+                                <option value="">Select country</option>
+                                <option value="USA">United States</option>
+                                <option value="India">India</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Marriage</label>
+                            <input type="date" id="marriageDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Place of Marriage (City and Country)</label>
+                            <input type="text" id="marriagePlace" placeholder="City, Country">
+                        </div>
+                        <div class="form-group">
+                            <label>If previously married, provide information about previous spouse(s):</label>
+                            <textarea id="previousSpouses" rows="3" placeholder="Name, date of birth, date and place of marriage, date and manner of termination"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Children Information (if any):</label>
+                            <textarea id="childrenInfo" rows="3" placeholder="List all children with name, date of birth, and country of birth"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 6: Review -->
+                    <div class="form-section" id="step6">
+                        <h3><i class="fas fa-check-circle"></i> Part 6 - Review Your Information</h3>
+                        <div class="cost-summary">
+                            <p style="text-align: center; color: var(--gray-600); padding: 2rem;">
+                                <i class="fas fa-file-signature" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary);"></i><br>
+                                Please review all information before submitting.<br>
+                                <strong>Your progress: <span id="reviewProgress">0%</span></strong>
+                            </p>
+                        </div>
+                        <div style="text-align: center;">
+                            <button class="btn btn-success" onclick="saveFormProgress()">
+                                <i class="fas fa-save"></i> Save Progress
+                            </button>
+                            <button class="btn btn-primary" onclick="completeForm()" style="margin-left: 1rem;">
+                                <i class="fas fa-check"></i> Mark as Complete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="btn btn-secondary" onclick="previousStep()" id="prevBtn">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="nextBtn">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCUMENTS TAB -->
+        <div id="documents-tab" class="tab-content">
+            <div class="doc-stats">
+                <div class="doc-stat-card">
+                    <div class="doc-stat-number" id="totalDocs">8</div>
+                    <div class="doc-stat-label">Total Required</div>
+                </div>
+                <div class="doc-stat-card">
+                    <div class="doc-stat-number" id="uploadedDocs">3</div>
+                    <div class="doc-stat-label">Uploaded</div>
+                </div>
+                <div class="doc-stat-card">
+                    <div class="doc-stat-number" id="pendingDocs">5</div>
+                    <div class="doc-stat-label">Pending</div>
+                </div>
+                <div class="doc-stat-card">
+                    <div class="doc-stat-number" id="expiredDocs">0</div>
+                    <div class="doc-stat-label">Expired</div>
+                </div>
+            </div>
+            
+            <div class="doc-upload-area" onclick="uploadDocument()">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Upload Document</h3>
+                <p>Drag and drop files here or click to browse<br>Supported formats: PDF, JPG, PNG (max 10MB)</p>
+                <input type="file" id="fileInput" style="display: none;" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(event)">
+            </div>
+            
+            <h3 style="margin-bottom: 1rem; font-size: 1.125rem; font-weight: 700; color: var(--gray-800);">Required Documents</h3>
+            <div class="document-list" id="documentList">
+                <!-- Documents will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- CALCULATOR TAB -->
+        <div id="calculator-tab" class="tab-content">
+            <div class="calculator-container">
+                <div class="calculator-form">
+                    <h3><i class="fas fa-sliders-h"></i> Calculate Your Costs</h3>
+                    
+                    <div class="form-group">
+                        <label>What form are you filing? *</label>
+                        <select id="calcForm" onchange="calculateCost()">
+                            <option value="">Select form</option>
+                            <option value="n400">N-400 Citizenship Application</option>
+                            <option value="i485">I-485 Adjustment of Status</option>
+                            <option value="i130">I-130 Petition for Alien Relative</option>
+                            <option value="i140">I-140 Immigrant Petition</option>
+                            <option value="i765">I-765 Work Authorization</option>
+                            <option value="i131">I-131 Advance Parole</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Who is filing? *</label>
+                        <select id="calcApplicant" onchange="calculateCost()">
+                            <option value="">Select applicant</option>
+                            <option value="adult">Adult (14+)</option>
+                            <option value="child">Child (under 14)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Do you need premium processing? (if applicable)</label>
+                        <select id="calcPremium" onchange="calculateCost()">
+                            <option value="no">No</option>
+                            <option value="yes">Yes (+$2,500)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Do you qualify for a fee waiver?</label>
+                        <select id="calcWaiver" onchange="calculateCost()">
+                            <option value="no">No, paying full fees</option>
+                            <option value="yes">Yes, applying for waiver</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Additional services (optional):</label>
+                        <div class="checkbox-group" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem;">
+                            <label class="checkbox-label" style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius); cursor: pointer; transition: var(--transition);">
+                                <input type="checkbox" id="calcBiometrics" onchange="calculateCost()" style="margin-top: 0.25rem; width: 18px; height: 18px; flex-shrink: 0;">
+                                <span style="line-height: 1.4;">Biometric services (if not included)</span>
+                            </label>
+                            <label class="checkbox-label" style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius); cursor: pointer; transition: var(--transition);">
+                                <input type="checkbox" id="calcTranslation" onchange="calculateCost()" style="margin-top: 0.25rem; width: 18px; height: 18px; flex-shrink: 0;">
+                                <span style="line-height: 1.4;">Document translation service (+$100)</span>
+                            </label>
+                            <label class="checkbox-label" style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius); cursor: pointer; transition: var(--transition);">
+                                <input type="checkbox" id="calcNotary" onchange="calculateCost()" style="margin-top: 0.25rem; width: 18px; height: 18px; flex-shrink: 0;">
+                                <span style="line-height: 1.4;">Notary service (+$50)</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <style>
+                        .checkbox-label:hover {
+                            background: var(--info-light) !important;
+                        }
+                        [data-theme="dark"] .checkbox-label {
+                            background: var(--gray-200) !important;
+                        }
+                        [data-theme="dark"] .checkbox-label:hover {
+                            background: var(--gray-300) !important;
+                        }
+                        .checkbox-label input[type="checkbox"] {
+                            accent-color: var(--primary);
+                        }
+                    </style>
+                </div>
+                
+                <div class="calculator-results">
+                    <h3><i class="fas fa-receipt"></i> Cost Summary</h3>
+                    
+                    <div class="total-cost">
+                        <h4>Estimated Total Cost</h4>
+                        <div class="amount" id="totalAmount">$0</div>
+                    </div>
+                    
+                    <div class="cost-summary">
+                        <div class="cost-row">
+                            <span class="cost-label">Filing Fee</span>
+                            <span class="cost-value" id="filingFee">$0</span>
+                        </div>
+                        <div class="cost-row">
+                            <span class="cost-label">Biometrics</span>
+                            <span class="cost-value" id="biometricsFee">$0</span>
+                        </div>
+                        <div class="cost-row">
+                            <span class="cost-label">Premium Processing</span>
+                            <span class="cost-value" id="premiumFee">$0</span>
+                        </div>
+                        <div class="cost-row">
+                            <span class="cost-label">Additional Services</span>
+                            <span class="cost-value" id="servicesFee">$0</span>
+                        </div>
+                        <div class="cost-row">
+                            <span class="cost-label">Fee Waiver Applied</span>
+                            <span class="cost-value" id="waiverSavings">-$0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="cost-breakdown">
+                        <div class="breakdown-title">Fee Breakdown by Form:</div>
+                        <div class="breakdown-item">
+                            <span>N-400 Citizenship</span>
+                            <span>$640 + $85 biometrics</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span>I-485 Adjustment</span>
+                            <span>$1,225 (or $750 for children)</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span>I-130 Petition</span>
+                            <span>$535</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span>I-140 Petition</span>
+                            <span>$700</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span>Premium Processing</span>
+                            <span>$2,500</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: var(--info-light); border-radius: var(--radius); font-size: 0.875rem; color: var(--info);">
+                        <i class="fas fa-info-circle"></i> Note: These are estimated filing fees only. Additional costs may include attorney fees, medical examinations, translations, and document acquisition.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIMELINE TAB -->
+        <div id="timeline-tab" class="tab-content">
+            <div class="timeline-container">
+                <div class="timeline-header">
+                    <h2><i class="fas fa-stream"></i> Your Immigration Timeline</h2>
+                    <div class="timeline-progress">
+                        <span class="timeline-progress-item completed"></span>
+                        <span class="timeline-progress-item completed"></span>
+                        <span class="timeline-progress-item current"></span>
+                        <span class="timeline-progress-item"></span>
+                        <span class="timeline-progress-item"></span>
+                        <span class="timeline-progress-item"></span>
+                        <span class="timeline-progress-item"></span>
+                        <span class="timeline-progress-item"></span>
+                    </div>
+                </div>
+                
+                <div class="timeline">
+                    <div class="timeline-item completed">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Entered the United States</div>
+                            <div class="timeline-date">January 2015</div>
+                            <div class="timeline-desc">Initial entry on F-1 student visa</div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item completed">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Changed to H-1B Status</div>
+                            <div class="timeline-date">October 2019</div>
+                            <div class="timeline-desc">Employer-sponsored H-1B petition approved</div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item current">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">PERM Labor Certification</div>
+                            <div class="timeline-date">In Progress - Expected: March 2025</div>
+                            <div class="timeline-desc">Current step: Labor market test for EB-3 green card</div>
+                            <div class="timeline-action">
+                                <button class="timeline-btn">Check Status</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">File I-140 Petition</div>
+                            <div class="timeline-date">Estimated: April 2025</div>
+                            <div class="timeline-desc">Employer files immigrant petition for alien worker</div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">I-140 Approved</div>
+                            <div class="timeline-date">Estimated: August 2025</div>
+                            <div class="timeline-desc">Immigrant petition approval notice received</div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Wait for Priority Date</div>
+                            <div class="timeline-date">2025 - 2028 (varies by country)</div>
+                            <div class="timeline-desc">India EB-3: Current priority date is ~2012</div>
+                            <div class="timeline-action">
+                                <button class="timeline-btn">Check Visa Bulletin</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">File I-485 Adjustment</div>
+                            <div class="timeline-date">When priority date becomes current</div>
+                            <div class="timeline-desc">Submit application to adjust status to permanent resident</div>
+                            <div class="timeline-action">
+                                <button class="timeline-btn">Prepare I-485</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Receive Green Card</div>
+                            <div class="timeline-date">After I-485 approval</div>
+                            <div class="timeline-desc">Congratulations! You are now a permanent resident</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ STATE ============
+        let currentStep = 1;
+        const totalSteps = 6;
+        
+        // ============ FORMS DATA ============
+        const formsData = [
+            {
+                id: 'n400',
+                name: 'N-400',
+                fullName: 'Application for Naturalization',
+                description: 'Apply for U.S. citizenship through naturalization',
+                fee: 725,
+                time: '8-12 months',
+                status: 'not-started',
+                progress: 0
+            },
+            {
+                id: 'i485',
+                name: 'I-485',
+                fullName: 'Adjustment of Status',
+                description: 'Apply to adjust your status to permanent resident',
+                fee: 1225,
+                time: '10-20 months',
+                status: 'in-progress',
+                progress: 35
+            },
+            {
+                id: 'i130',
+                name: 'I-130',
+                fullName: 'Petition for Alien Relative',
+                description: 'Establish family relationship for green card',
+                fee: 535,
+                time: '10-14 months',
+                status: 'not-started',
+                progress: 0
+            },
+            {
+                id: 'i140',
+                name: 'I-140',
+                fullName: 'Immigrant Petition for Alien Worker',
+                description: 'Employer-sponsored employment-based green card',
+                fee: 700,
+                time: '4-6 months',
+                status: 'in-progress',
+                progress: 60
+            },
+            {
+                id: 'i765',
+                name: 'I-765',
+                fullName: 'Application for Employment Authorization',
+                description: 'Get work permit while waiting for green card',
+                fee: 550,
+                time: '2-4 months',
+                status: 'completed',
+                progress: 100
+            },
+            {
+                id: 'i131',
+                name: 'I-131',
+                fullName: 'Application for Travel Document',
+                description: 'Request advance parole to travel abroad',
+                fee: 585,
+                time: '3-6 months',
+                status: 'not-started',
+                progress: 0
+            }
+        ];
+
+        // ============ DOCUMENTS DATA ============
+        let documentsData = [
+            { id: 1, name: 'Birth Certificate', type: 'civil', status: 'uploaded', date: '2024-12-01', size: '2.4 MB' },
+            { id: 2, name: 'Passport', type: 'identification', status: 'uploaded', date: '2024-11-15', size: '3.1 MB' },
+            { id: 3, name: 'I-94 Arrival/Departure', type: 'immigration', status: 'uploaded', date: '2024-10-20', size: '1.2 MB' },
+            { id: 4, name: 'I-797 Approval Notice', type: 'immigration', status: 'missing', date: null, size: null },
+            { id: 5, name: 'Police Certificates', type: 'civil', status: 'missing', date: null, size: null },
+            { id: 6, name: 'Tax Returns (Last 3 years)', type: 'financial', status: 'missing', date: null, size: null },
+            { id: 7, name: 'Marriage Certificate', type: 'civil', status: 'missing', date: null, size: null },
+            { id: 8, name: 'Medical Examination (I-693)', type: 'medical', status: 'expired', date: '2024-06-15', size: '1.8 MB' }
+        ];
+
+        // ============ INITIALIZE ============
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Session verification
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            if (!isLoggedIn || isLoggedIn !== 'true') {
+                window.location.href = 'visa-guide-auth.html';
+                return;
+            }
+
+            // Load theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+            // Populate forms
+            populateForms();
+            
+            // Populate documents
+            populateDocuments();
+            
+            // Update document stats
+            updateDocStats();
+            
+            // Load saved form data
+            loadFormData();
+        }
+
+        // ============ TABS ============
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.closest('.tab-btn').classList.add('active');
+        }
+
+        // ============ FORMS ============
+        function populateForms() {
+            const formsGrid = document.getElementById('formsGrid');
+            
+            formsData.forEach(function(form) {
+                const card = document.createElement('div');
+                card.className = 'form-card';
+                card.onclick = function() {
+                    openForm(form.id);
+                };
+                
+                let statusClass = 'status-not-started';
+                if (form.status === 'in-progress') statusClass = 'status-in-progress';
+                if (form.status === 'completed') statusClass = 'status-completed';
+                
+                card.innerHTML = '<div class="form-card-header">' +
+                    '<span class="form-number">' + form.name + '</span>' +
+                    '<span class="form-status ' + statusClass + '">' + capitalizeFirst(form.status.replace('-', ' ')) + '</span>' +
+                    '</div>' +
+                    '<h3>' + form.fullName + '</h3>' +
+                    '<p>' + form.description + '</p>' +
+                    '<div class="form-meta">' +
+                    '<span><i class="fas fa-dollar-sign"></i> $' + form.fee + '</span>' +
+                    '<span><i class="fas fa-clock"></i> ' + form.time + '</span>' +
+                    '</div>' +
+                    '<div class="progress-bar">' +
+                    '<div class="progress-fill" style="width: ' + form.progress + '%"></div>' +
+                    '</div>';
+                
+                formsGrid.appendChild(card);
+            });
+        }
+
+        function openForm(formId) {
+            switchTab('interactive');
+            showToast('Opening ' + formId.toUpperCase() + ' form...');
+        }
+
+        // ============ INTERACTIVE FORM ============
+        function goToStep(step) {
+            // Hide current section
+            document.getElementById('step' + currentStep).classList.remove('active');
+            
+            // Update current step
+            currentStep = step;
+            
+            // Show new section
+            document.getElementById('step' + currentStep).classList.add('active');
+            
+            // Update step indicators
+            updateStepIndicators();
+            
+            // Update navigation buttons
+            updateNavButtons();
+            
+            // Update progress display
+            updateProgressDisplay();
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                goToStep(currentStep + 1);
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                goToStep(currentStep - 1);
+            }
+        }
+
+        function updateStepIndicators() {
+            const steps = document.querySelectorAll('.step-indicator');
+            steps.forEach(function(step, index) {
+                step.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+        }
+
+        function updateNavButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+            nextBtn.innerHTML = currentStep === totalSteps ? 
+                'Submit <i class="fas fa-paper-plane"></i>' : 
+                'Next <i class="fas fa-arrow-right"></i>';
+        }
+
+        function updateProgressDisplay() {
+            const progress = Math.round((currentStep / totalSteps) * 100);
+            document.getElementById('formProgress').textContent = 'Progress: ' + progress + '%';
+            
+            if (currentStep === totalSteps) {
+                document.getElementById('reviewProgress').textContent = progress + '%';
+            }
+        }
+
+        // ============ FORM DATA ============
+        function saveFormProgress() {
+            const formData = {
+                step1: {
+                    lastName: document.getElementById('lastName').value,
+                    firstName: document.getElementById('firstName').value,
+                    middleName: document.getElementById('middleName').value,
+                    dob: document.getElementById('dob').value,
+                    birthCountry: document.getElementById('birthCountry').value,
+                    nationality: document.getElementById('nationality').value,
+                    aNumber: document.getElementById('aNumber').value
+                },
+                step2: {
+                    eligibilityBasis: document.getElementById('eligibilityBasis').value,
+                    communistParty: document.getElementById('communistParty').value,
+                    criminalCharges: document.getElementById('criminalCharges').value,
+                    criminalDetails: document.getElementById('criminalDetails').value
+                },
+                step3: {
+                    currentAddress: document.getElementById('currentAddress').value,
+                    currentCity: document.getElementById('currentCity').value,
+                    currentState: document.getElementById('currentState').value,
+                    currentZip: document.getElementById('currentZip').value,
+                    currentCounty: document.getElementById('currentCounty').value,
+                    arrivalDate: document.getElementById('arrivalDate').value,
+                    countriesLived: document.getElementById('countriesLived').value
+                },
+                step4: {
+                    employer: document.getElementById('employer').value,
+                    occupation: document.getElementById('occupation').value,
+                    employerAddress: document.getElementById('employerAddress').value,
+                    employerStartDate: document.getElementById('employerStartDate').value,
+                    employerEndDate: document.getElementById('employerEndDate').value,
+                    employmentHistory: document.getElementById('employmentHistory').value
+                },
+                step5: {
+                    maritalStatus: document.getElementById('maritalStatus').value,
+                    spouseName: document.getElementById('spouseName').value,
+                    spouseDob: document.getElementById('spouseDob').value,
+                    spouseBirthCountry: document.getElementById('spouseBirthCountry').value,
+                    marriageDate: document.getElementById('marriageDate').value,
+                    marriagePlace: document.getElementById('marriagePlace').value,
+                    previousSpouses: document.getElementById('previousSpouses').value,
+                    childrenInfo: document.getElementById('childrenInfo').value
+                },
+                currentStep: currentStep,
+                lastSaved: new Date().toISOString()
+            };
+            
+            localStorage.setItem('n400FormData', JSON.stringify(formData));
+            showToast('Progress saved successfully!');
+        }
+
+        function loadFormData() {
+            const savedData = localStorage.getItem('n400FormData');
+            if (savedData) {
+                try {
+                    const formData = JSON.parse(savedData);
+                    
+                    // Load step 1
+                    if (formData.step1) {
+                        document.getElementById('lastName').value = formData.step1.lastName || '';
+                        document.getElementById('firstName').value = formData.step1.firstName || '';
+                        document.getElementById('middleName').value = formData.step1.middleName || '';
+                        document.getElementById('dob').value = formData.step1.dob || '';
+                        document.getElementById('birthCountry').value = formData.step1.birthCountry || '';
+                        document.getElementById('nationality').value = formData.step1.nationality || '';
+                        document.getElementById('aNumber').value = formData.step1.aNumber || '';
+                    }
+                    
+                    // Load step 2
+                    if (formData.step2) {
+                        document.getElementById('eligibilityBasis').value = formData.step2.eligibilityBasis || '';
+                        document.getElementById('communistParty').value = formData.step2.communistParty || '';
+                        document.getElementById('criminalCharges').value = formData.step2.criminalCharges || '';
+                        document.getElementById('criminalDetails').value = formData.step2.criminalDetails || '';
+                    }
+                    
+                    // Load step 3
+                    if (formData.step3) {
+                        document.getElementById('currentAddress').value = formData.step3.currentAddress || '';
+                        document.getElementById('currentCity').value = formData.step3.currentCity || '';
+                        document.getElementById('currentState').value = formData.step3.currentState || '';
+                        document.getElementById('currentZip').value = formData.step3.currentZip || '';
+                        document.getElementById('currentCounty').value = formData.step3.currentCounty || '';
+                        document.getElementById('arrivalDate').value = formData.step3.arrivalDate || '';
+                        document.getElementById('countriesLived').value = formData.step3.countriesLived || '';
+                    }
+                    
+                    // Load step 4
+                    if (formData.step4) {
+                        document.getElementById('employer').value = formData.step4.employer || '';
+                        document.getElementById('occupation').value = formData.step4.occupation || '';
+                        document.getElementById('employerAddress').value = formData.step4.employerAddress || '';
+                        document.getElementById('employerStartDate').value = formData.step4.employerStartDate || '';
+                        document.getElementById('employerEndDate').value = formData.step4.employerEndDate || '';
+                        document.getElementById('employmentHistory').value = formData.step4.employmentHistory || '';
+                    }
+                    
+                    // Load step 5
+                    if (formData.step5) {
+                        document.getElementById('maritalStatus').value = formData.step5.maritalStatus || '';
+                        document.getElementById('spouseName').value = formData.step5.spouseName || '';
+                        document.getElementById('spouseDob').value = formData.step5.spouseDob || '';
+                        document.getElementById('spouseBirthCountry').value = formData.step5.spouseBirthCountry || '';
+                        document.getElementById('marriageDate').value = formData.step5.marriageDate || '';
+                        document.getElementById('marriagePlace').value = formData.step5.marriagePlace || '';
+                        document.getElementById('previousSpouses').value = formData.step5.previousSpouses || '';
+                        document.getElementById('childrenInfo').value = formData.step5.childrenInfo || '';
+                    }
+                    
+                    // Go to saved step
+                    if (formData.currentStep) {
+                        goToStep(formData.currentStep);
+                    }
+                    
+                    // Show last saved message
+                    if (formData.lastSaved) {
+                        const lastSaved = new Date(formData.lastSaved);
+                        showToast('Resumed from last save: ' + lastSaved.toLocaleDateString());
+                    }
+                } catch (e) {
+                    console.error('Error loading form data:', e);
+                }
+            }
+        }
+
+        function completeForm() {
+            saveFormProgress();
+            showToast('Congratulations! Form N-400 marked as complete.');
+        }
+
+        // ============ DOCUMENTS ============
+        function populateDocuments() {
+            const documentList = document.getElementById('documentList');
+            documentList.innerHTML = '';
+            
+            documentsData.forEach(function(doc) {
+                const item = document.createElement('div');
+                item.className = 'document-item';
+                
+                let statusClass = 'doc-status-missing';
+                if (doc.status === 'uploaded') statusClass = 'doc-status-uploaded';
+                if (doc.status === 'expired') statusClass = 'doc-status-expired';
+                
+                let statusText = 'Missing';
+                if (doc.status === 'uploaded') statusText = 'Uploaded';
+                if (doc.status === 'expired') statusText = 'Expired';
+                
+                let dateInfo = '';
+                if (doc.date) {
+                    dateInfo = '<span style="color: var(--gray-500); margin-left: 0.5rem;">' + formatDate(doc.date) + '</span>';
+                }
+                
+                let actionButtons = '';
+                if (doc.status === 'uploaded') {
+                    actionButtons = '<div class="document-actions">' +
+                        '<button class="doc-action-btn" title="View" onclick="viewDocument(' + doc.id + ')"><i class="fas fa-eye"></i></button>' +
+                        '<button class="doc-action-btn" title="Download" onclick="downloadDocument(' + doc.id + ')"><i class="fas fa-download"></i></button>' +
+                        '<button class="doc-action-btn" title="Delete" onclick="deleteDocument(' + doc.id + ')"><i class="fas fa-trash"></i></button>' +
+                        '</div>';
+                } else {
+                    actionButtons = '<div class="document-actions">' +
+                        '<button class="doc-action-btn" title="Upload" onclick="uploadSingleDocument(' + doc.id + ')"><i class="fas fa-upload"></i></button>' +
+                        '</div>';
+                }
+                
+                item.innerHTML = '<div class="document-icon"><i class="fas fa-file-' + getFileIcon(doc.type) + '"></i></div>' +
+                    '<div class="document-info">' +
+                    '<div class="document-name">' + doc.name + '</div>' +
+                    '<div class="document-meta">' + (doc.size || 'Not uploaded') + dateInfo + '</div>' +
+                    '</div>' +
+                    '<span class="document-status ' + statusClass + '">' + statusText + '</span>' +
+                    actionButtons;
+                
+                documentList.appendChild(item);
+            });
+        }
+
+        function updateDocStats() {
+            const total = documentsData.length;
+            const uploaded = documentsData.filter(function(d) { return d.status === 'uploaded'; }).length;
+            const pending = documentsData.filter(function(d) { return d.status === 'missing'; }).length;
+            const expired = documentsData.filter(function(d) { return d.status === 'expired'; }).length;
+            
+            document.getElementById('totalDocs').textContent = total;
+            document.getElementById('uploadedDocs').textContent = uploaded;
+            document.getElementById('pendingDocs').textContent = pending;
+            document.getElementById('expiredDocs').textContent = expired;
+        }
+
+        function uploadDocument() {
+            document.getElementById('fileInput').click();
+        }
+
+        function uploadSingleDocument(docId) {
+            const doc = documentsData.find(function(d) { return d.id === docId; });
+            if (doc) {
+                // Simulate upload
+                doc.status = 'uploaded';
+                doc.date = new Date().toISOString().split('T')[0];
+                doc.size = (Math.random() * 3 + 0.5).toFixed(1) + ' MB';
+                
+                populateDocuments();
+                updateDocStats();
+                showToast(doc.name + ' uploaded successfully!');
+            }
+        }
+
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                // Simulate upload for first file
+                const file = files[0];
+                const doc = documentsData.find(function(d) { return d.status === 'missing'; });
+                
+                if (doc) {
+                    doc.status = 'uploaded';
+                    doc.date = new Date().toISOString().split('T')[0];
+                    doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+                    
+                    populateDocuments();
+                    updateDocStats();
+                    showToast(file.name + ' uploaded successfully!');
+                } else {
+                    showToast('All required documents are already uploaded!');
+                }
+            }
+        }
+
+        function viewDocument(docId) {
+            showToast('Opening document preview...');
+        }
+
+        function downloadDocument(docId) {
+            showToast('Downloading document...');
+        }
+
+        function deleteDocument(docId) {
+            if (confirm('Are you sure you want to delete this document?')) {
+                const doc = documentsData.find(function(d) { return d.id === docId; });
+                if (doc) {
+                    doc.status = 'missing';
+                    doc.date = null;
+                    doc.size = null;
+                    
+                    populateDocuments();
+                    updateDocStats();
+                    showToast('Document deleted.');
+                }
+            }
+        }
+
+        // ============ COST CALCULATOR ============
+        function calculateCost() {
+            const form = document.getElementById('calcForm').value;
+            const applicant = document.getElementById('calcApplicant').value;
+            const premium = document.getElementById('calcPremium').value;
+            const waiver = document.getElementById('calcWaiver').value;
+            const translation = document.getElementById('calcTranslation').checked;
+            const notary = document.getElementById('calcNotary').checked;
+            
+            let filingFee = 0;
+            let biometricsFee = 0;
+            let premiumFee = 0;
+            let servicesFee = 0;
+            
+            // Base filing fees
+            if (form === 'n400') {
+                filingFee = 640;
+                biometricsFee = 85;
+            } else if (form === 'i485') {
+                filingFee = applicant === 'child' ? 750 : 1225;
+            } else if (form === 'i130') {
+                filingFee = 535;
+            } else if (form === 'i140') {
+                filingFee = 700;
+            } else if (form === 'i765') {
+                filingFee = 550;
+            } else if (form === 'i131') {
+                filingFee = 585;
+            }
+            
+            // Premium processing
+            if (premium === 'yes' && (form === 'i140' || form === 'i485')) {
+                premiumFee = 2500;
+            }
+            
+            // Additional services
+            if (translation) servicesFee += 100;
+            if (notary) servicesFee += 50;
+            
+            // Calculate totals
+            let subtotal = filingFee + biometricsFee + premiumFee + servicesFee;
+            let waiverSavings = 0;
+            
+            if (waiver === 'yes') {
+                waiverSavings = Math.floor(subtotal * 0.5); // 50% waiver
+            }
+            
+            let total = subtotal - waiverSavings;
+            
+            // Update display
+            document.getElementById('totalAmount').textContent = '$' + total.toLocaleString();
+            document.getElementById('filingFee').textContent = '$' + filingFee.toLocaleString();
+            document.getElementById('biometricsFee').textContent = '$' + biometricsFee.toLocaleString();
+            document.getElementById('premiumFee').textContent = '$' + premiumFee.toLocaleString();
+            document.getElementById('servicesFee').textContent = '$' + servicesFee.toLocaleString();
+            document.getElementById('waiverSavings').textContent = '-$' + waiverSavings.toLocaleString();
+        }
+
+        // ============ UTILITIES ============
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        function capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function getFileIcon(type) {
+            const icons = {
+                'civil': 'certificate',
+                'identification': 'id-card',
+                'immigration': 'file-contract',
+                'financial': 'file-invoice-dollar',
+                'medical': 'file-medical'
+            };
+            return icons[type] || 'alt';
+        }
+
+        function showToast(message) {
+            alert(message);
+        }
+
+        console.log('Visa Guide AI - Forms Center loaded successfully');
+        console.log('Features: Interactive Forms, Document Manager, Cost Calculator, Timeline');
+        
+        // Initialize Firebase
+        if (typeof FirebaseCore !== 'undefined') {
+            FirebaseCore.initialize(firebaseConfig);
+            console.log('Firebase integration ready');
+            
+            // Initialize Data Sync for forms
+            if (typeof DataSync !== 'undefined') {
+                window.dataSync = new DataSync();
+            }
+        }
+    </script>
+</body>
+</html>

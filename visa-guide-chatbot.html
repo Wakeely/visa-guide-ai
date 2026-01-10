@@ -1,0 +1,2245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Visa Guide AI - Intelligent Immigration Assistant with Voice Chat">
+    <title>Visa Guide AI - Chat Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <style>
+        /* ============ CSS VARIABLES ============ */
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary: #6366f1;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --info: #0ea5e9;
+            --info-light: #e0f2fe;
+            
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            --white: #ffffff;
+            --black: #000000;
+            
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            
+            --radius: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --radius-full: 9999px;
+            
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --gray-50: #0f172a;
+            --gray-100: #1e293b;
+            --gray-200: #334155;
+            --gray-300: #475569;
+            --gray-400: #64748b;
+            --gray-500: #94a3b8;
+            --gray-600: #cbd5e1;
+            --gray-700: #e2e8f0;
+            --gray-800: #f1f5f9;
+            --gray-900: #f8fafc;
+            --white: #0f172a;
+            --black: #ffffff;
+            --success-light: #064e3b;
+            --warning-light: #78350f;
+            --danger-light: #7f1d1d;
+            --info-light: #0c4a6e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] body {
+            background-color: var(--gray-900);
+            color: var(--gray-200);
+        }
+
+        /* ============ NAVIGATION ============ */
+        .navbar {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .navbar {
+            background: var(--gray-100);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.375rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand i {
+            font-size: 1.625rem;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            color: var(--gray-600);
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 0.9375rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        [data-theme="dark"] .nav-link {
+            color: var(--gray-400);
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary);
+            background: var(--gray-100);
+            text-decoration: none;
+        }
+
+        [data-theme="dark"] .nav-link:hover, [data-theme="dark"] .nav-link.active {
+            background: var(--gray-200);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        [data-theme="dark"] .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            background: var(--gray-100);
+            border: none;
+            color: var(--gray-600);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: var(--gray-200);
+            color: var(--gray-400);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* ============ MAIN LAYOUT ============ */
+        .chat-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr 320px;
+            min-height: calc(100vh - 70px);
+            gap: 0;
+        }
+
+        /* ============ LEFT SIDEBAR - TOPICS ============ */
+        .chat-sidebar {
+            background: var(--white);
+            border-right: 1px solid var(--gray-200);
+            padding: 1.5rem;
+            overflow-y: auto;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .chat-sidebar {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gray-400);
+            margin-bottom: 0.75rem;
+            padding: 0 0.5rem;
+        }
+
+        .topic-list {
+            list-style: none;
+        }
+
+        .topic-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .topic-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius);
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: left;
+        }
+
+        [data-theme="dark"] .topic-btn {
+            color: var(--gray-400);
+        }
+
+        .topic-btn:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        [data-theme="dark"] .topic-btn:hover {
+            background: var(--gray-200);
+        }
+
+        .topic-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .topic-btn i {
+            width: 20px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .quick-prompts {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .prompt-chip {
+            padding: 0.5rem 0.75rem;
+            background: var(--gray-100);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-full);
+            font-size: 0.8125rem;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        [data-theme="dark"] .prompt-chip {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+            color: var(--gray-400);
+        }
+
+        .prompt-chip:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* ============ MAIN CHAT AREA ============ */
+        .chat-main {
+            display: flex;
+            flex-direction: column;
+            background: var(--white);
+            position: relative;
+        }
+
+        [data-theme="dark"] .chat-main {
+            background: var(--gray-100);
+        }
+
+        .chat-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--white);
+        }
+
+        [data-theme="dark"] .chat-header {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .chat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse-status 2s infinite;
+        }
+
+        @keyframes pulse-status {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.9); }
+        }
+
+        .chat-status-text {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+        }
+
+        [data-theme="dark"] .chat-status-text {
+            color: var(--gray-400);
+        }
+
+        .chat-model-info {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+            background: var(--gray-100);
+            padding: 0.25rem 0.625rem;
+            border-radius: var(--radius-full);
+        }
+
+        [data-theme="dark"] .chat-model-info {
+            background: var(--gray-200);
+            color: var(--gray-500);
+        }
+
+        .chat-header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius);
+            border: none;
+            background: var(--gray-100);
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        [data-theme="dark"] .header-btn {
+            background: var(--gray-200);
+            color: var(--gray-400);
+        }
+
+        .header-btn:hover {
+            background: var(--gray-200);
+            color: var(--gray-800);
+        }
+
+        [data-theme="dark"] .header-btn:hover {
+            background: var(--gray-300);
+            color: var(--gray-200);
+        }
+
+        .voice-toggle {
+            background: var(--success);
+            color: white;
+            width: auto;
+            padding: 0 1rem;
+            gap: 0.5rem;
+        }
+
+        .voice-toggle:hover {
+            background: #059669;
+            color: white;
+        }
+
+        .voice-toggle.listening {
+            background: var(--danger);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+
+        /* ============ CHAT MESSAGES ============ */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background: var(--gray-50);
+        }
+
+        [data-theme="dark"] .chat-messages {
+            background: var(--gray-900);
+        }
+
+        .message {
+            display: flex;
+            gap: 0.75rem;
+            max-width: 85%;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+            align-self: flex-end;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.875rem;
+        }
+
+        .message.bot .message-avatar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+
+        .message.user .message-avatar {
+            background: var(--gray-300);
+            color: var(--gray-600);
+        }
+
+        [data-theme="dark"] .message.user .message-avatar {
+            background: var(--gray-600);
+            color: var(--gray-300);
+        }
+
+        .message-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .message-sender {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-500);
+        }
+
+        [data-theme="dark"] .message-sender {
+            color: var(--gray-400);
+        }
+
+        .message.user .message-sender {
+            text-align: right;
+        }
+
+        .message-bubble {
+            padding: 0.875rem 1rem;
+            border-radius: var(--radius-lg);
+            font-size: 0.9375rem;
+            line-height: 1.6;
+        }
+
+        .message.bot .message-bubble {
+            background: var(--white);
+            color: var(--gray-800);
+            border: 1px solid var(--gray-200);
+            border-bottom-left-radius: var(--radius);
+        }
+
+        [data-theme="dark"] .message.bot .message-bubble {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+            color: var(--gray-100);
+        }
+
+        .message.user .message-bubble {
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: var(--radius);
+        }
+
+        .message-time {
+            font-size: 0.6875rem;
+            color: var(--gray-400);
+            padding: 0 0.5rem;
+        }
+
+        .message.user .message-time {
+            text-align: right;
+        }
+
+        /* Quick Replies */
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .quick-reply {
+            padding: 0.5rem 1rem;
+            background: var(--info-light);
+            color: var(--info);
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .quick-reply {
+            background: var(--info);
+            color: white;
+        }
+
+        .quick-reply:hover {
+            background: var(--info);
+            color: white;
+        }
+
+        [data-theme="dark"] .quick-reply:hover {
+            background: #0284c7;
+        }
+
+        /* Loading Indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--gray-400);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* ============ CHAT INPUT ============ */
+        .chat-input-container {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            background: var(--white);
+        }
+
+        [data-theme="dark"] .chat-input-container {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.75rem;
+            background: var(--gray-100);
+            border: 2px solid transparent;
+            border-radius: var(--radius-lg);
+            padding: 0.5rem;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .chat-input-wrapper {
+            background: var(--gray-200);
+        }
+
+        .chat-input-wrapper:focus-within {
+            border-color: var(--primary);
+            background: var(--white);
+        }
+
+        [data-theme="dark"] .chat-input-wrapper:focus-within {
+            background: var(--gray-100);
+        }
+
+        .chat-input-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem;
+        }
+
+        .input-action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius);
+            border: none;
+            background: transparent;
+            color: var(--gray-500);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .input-action-btn:hover {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        [data-theme="dark"] .input-action-btn:hover {
+            background: var(--gray-300);
+            color: var(--gray-200);
+        }
+
+        .input-action-btn.voice-btn {
+            background: var(--gray-200);
+            color: var(--gray-600);
+        }
+
+        .input-action-btn.voice-btn.listening {
+            background: var(--danger);
+            color: white;
+        }
+
+        .input-action-btn.voice-btn:hover {
+            background: var(--gray-300);
+        }
+
+        .input-action-btn.voice-btn.listening:hover {
+            background: var(--danger);
+        }
+
+        .chat-textarea {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 0.75rem;
+            font-size: 0.9375rem;
+            color: var(--gray-800);
+            resize: none;
+            outline: none;
+            max-height: 150px;
+            min-height: 44px;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        [data-theme="dark"] .chat-textarea {
+            color: var(--gray-200);
+        }
+
+        .chat-textarea::placeholder {
+            color: var(--gray-400);
+        }
+
+        [data-theme="dark"] .chat-textarea::placeholder {
+            color: var(--gray-500);
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius);
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: var(--primary-light);
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .voice-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--danger);
+            color: white;
+            border-radius: var(--radius-full);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            animation: pulse 1s infinite;
+        }
+
+        .voice-indicator i {
+            font-size: 0.75rem;
+        }
+
+        /* ============ RIGHT SIDEBAR - CONTEXT ============ */
+        .context-sidebar {
+            background: var(--white);
+            border-left: 1px solid var(--gray-200);
+            padding: 1.5rem;
+            overflow-y: auto;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .context-sidebar {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .context-card {
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .context-card {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+        }
+
+        .context-card-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gray-500);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        [data-theme="dark"] .context-card-title {
+            color: var(--gray-400);
+        }
+
+        .context-card-title i {
+            color: var(--primary);
+        }
+
+        .user-context-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 0.875rem;
+        }
+
+        [data-theme="dark"] .user-context-item {
+            border-color: var(--gray-300);
+        }
+
+        .user-context-item:last-child {
+            border-bottom: none;
+        }
+
+        .context-label {
+            color: var(--gray-600);
+        }
+
+        [data-theme="dark"] .context-label {
+            color: var(--gray-400);
+        }
+
+        .context-value {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        [data-theme="dark"] .context-value {
+            color: var(--gray-200);
+        }
+
+        .suggestion-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--white);
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .suggestion-item {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+        }
+
+        .suggestion-item:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .suggestion-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius);
+            background: var(--info-light);
+            color: var(--info);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.875rem;
+        }
+
+        [data-theme="dark"] .suggestion-icon {
+            background: var(--info);
+            color: white;
+        }
+
+        .suggestion-text h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.125rem;
+        }
+
+        [data-theme="dark"] .suggestion-text h4 {
+            color: var(--gray-100);
+        }
+
+        .suggestion-text p {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        [data-theme="dark"] .suggestion-text p {
+            color: var(--gray-400);
+        }
+
+        /* Upgrade Card */
+        .upgrade-card {
+            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            color: white;
+            text-align: center;
+        }
+
+        .upgrade-card h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .upgrade-card p {
+            font-size: 0.8125rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .upgrade-btn {
+            width: 100%;
+            padding: 0.625rem;
+            background: white;
+            color: #7c3aed;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .upgrade-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ============ MODAL ============ */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            animation: modalIn 0.3s ease;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: var(--gray-100);
+        }
+
+        @keyframes modalIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.25rem;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        [data-theme="dark"] .modal-header h3 {
+            color: var(--gray-100);
+        }
+
+        .modal-header p {
+            color: var(--gray-500);
+            font-size: 0.9375rem;
+        }
+
+        [data-theme="dark"] .modal-header p {
+            color: var(--gray-400);
+        }
+
+        .voice-modal-content {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            border-radius: var(--radius-lg);
+        }
+
+        .voice-animation {
+            width: 120px;
+            height: 120px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .voice-animation::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.3);
+            animation: voicePulse 2s infinite;
+        }
+
+        @keyframes voicePulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0; }
+        }
+
+        .voice-animation i {
+            font-size: 3rem;
+        }
+
+        .voice-status {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .voice-transcript {
+            font-size: 1rem;
+            opacity: 0.9;
+            min-height: 1.5rem;
+        }
+
+        .voice-close {
+            margin-top: 1.5rem;
+            padding: 0.625rem 1.5rem;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: var(--radius);
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .voice-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 1200px) {
+            .chat-layout {
+                grid-template-columns: 280px 1fr;
+            }
+
+            .context-sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .chat-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .message {
+                max-width: 95%;
+            }
+
+            .chat-messages {
+                padding: 1rem;
+            }
+
+            .chat-input-container {
+                padding: 0.75rem 1rem;
+            }
+        }
+
+        /* ============ SCROLLBAR ============ */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 3px;
+        }
+
+        [data-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: var(--gray-500);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+
+        [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+
+        /* Feature Lock */
+        .feature-locked {
+            position: relative;
+        }
+
+        .feature-locked::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.5);
+            border-radius: var(--radius);
+            z-index: 1;
+        }
+
+        [data-theme="dark"] .feature-locked::after {
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .lock-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* ============ TRANSCRIPT ============ */
+        .transcript-panel {
+            position: fixed;
+            bottom: 100px;
+            right: 1rem;
+            width: 350px;
+            max-height: 300px;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+            z-index: 100;
+            display: none;
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .transcript-panel {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .transcript-panel.active {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .transcript-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--gray-50);
+        }
+
+        [data-theme="dark"] .transcript-header {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+        }
+
+        .transcript-header h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        [data-theme="dark"] .transcript-header h4 {
+            color: var(--gray-100);
+        }
+
+        .transcript-content {
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.875rem;
+            color: var(--gray-700);
+        }
+
+        [data-theme="dark"] .transcript-content {
+            color: var(--gray-300);
+        }
+
+        .transcript-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        [data-theme="dark"] .transcript-item {
+            border-color: var(--gray-200);
+        }
+
+        .transcript-item:last-child {
+            border-bottom: none;
+        }
+
+        .transcript-label {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: var(--gray-500);
+            margin-bottom: 0.25rem;
+        }
+
+        .transcript-text {
+            color: var(--gray-800);
+        }
+
+        [data-theme="dark"] .transcript-text {
+            color: var(--gray-200);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-passport"></i>
+                Visa Guide AI
+            </a>
+            
+            <ul class="navbar-nav">
+                <li><a href="visa-guide-dashboard.html" class="nav-link"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="#" class="nav-link"><i class="fas fa-road"></i> Roadmap</a></li>
+                <li><a href="visa-guide-forms.html" class="nav-link"><i class="fas fa-file-alt"></i> Forms</a></li>
+                <li><a href="visa-guide-chatbot.html" class="nav-link active"><i class="fas fa-comments"></i> Chat</a></li>
+                <li><a href="#" class="nav-link"><i class="fas fa-book"></i> Resources</a></li>
+            </ul>
+            
+            <div class="navbar-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Chat Layout -->
+    <div class="chat-layout">
+        <!-- Left Sidebar -->
+        <aside class="chat-sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Chat Topics</div>
+                <ul class="topic-list">
+                    <li class="topic-item">
+                        <button class="topic-btn active" onclick="switchTopic('general')">
+                            <i class="fas fa-comment-alt"></i> General Questions
+                        </button>
+                    </li>
+                    <li class="topic-item">
+                        <button class="topic-btn" onclick="switchTopic('eligibility')">
+                            <i class="fas fa-clipboard-check"></i> Eligibility Check
+                        </button>
+                    </li>
+                    <li class="topic-item">
+                        <button class="topic-btn" onclick="switchTopic('documents')">
+                            <i class="fas fa-file-alt"></i> Document Help
+                        </button>
+                    </li>
+                    <li class="topic-item">
+                        <button class="topic-btn" onclick="switchTopic('interview')">
+                            <i class="fas fa-user-tie"></i> Interview Prep
+                        </button>
+                    </li>
+                    <li class="topic-item">
+                        <button class="topic-btn" onclick="switchTopic('forms')">
+                            <i class="fas fa-forms"></i> Forms Guidance
+                        </button>
+                    </li>
+                    <li class="topic-item">
+                        <button class="topic-btn" onclick="switchTopic('deadlines')">
+                            <i class="fas fa-calendar-check"></i> Deadlines
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Quick Prompts</div>
+                <div class="quick-prompts">
+                    <span class="prompt-chip" onclick="sendQuickPrompt('How do I renew my H-1B?')">How do I renew my H-1B?</span>
+                    <span class="prompt-chip" onclick="sendQuickPrompt('What documents do I need for I-485?')">Documents for I-485?</span>
+                    <span class="prompt-chip" onclick="sendQuickPrompt('EB-3 India priority date prediction')">EB-3 India prediction</span>
+                    <span class="prompt-chip" onclick="sendQuickPrompt('H-1B transfer process')">H-1B transfer process</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Your Profile</div>
+                <div class="context-card" style="margin-bottom: 0;">
+                    <div class="user-context-item">
+                        <span class="context-label">Visa Type</span>
+                        <span class="context-value">EB-3</span>
+                    </div>
+                    <div class="user-context-item">
+                        <span class="context-label">Country</span>
+                        <span class="context-value">India</span>
+                    </div>
+                    <div class="user-context-item">
+                        <span class="context-label">Priority Date</span>
+                        <span class="context-value">Mar 2019</span>
+                    </div>
+                    <div class="user-context-item">
+                        <span class="context-label">Current Status</span>
+                        <span class="context-value">H-1B</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upgrade-card">
+                <h4><i class="fas fa-crown"></i> Unlock Voice Mode</h4>
+                <p>Upgrade to Pro for voice-to-voice conversations</p>
+                <button class="upgrade-btn" onclick="showUpgradeModal()">Upgrade Now</button>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-main">
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <div class="chat-status">
+                        <span class="status-dot"></span>
+                        <span class="chat-status-text">Online</span>
+                    </div>
+                    <span class="chat-model-info">AI Model: Immigration Expert v2.0</span>
+                </div>
+                <div class="chat-header-right">
+                    <button class="header-btn" onclick="clearChat()" title="Clear chat">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    <button class="header-btn" onclick="toggleTranscript()" title="View transcript">
+                        <i class="fas fa-file-alt"></i>
+                    </button>
+                    <button class="header-btn voice-toggle" id="voiceToggleBtn" onclick="toggleVoiceMode()" title="Voice conversation mode">
+                        <i class="fas fa-microphone"></i>
+                        <span style="font-size: 0.8125rem; font-weight: 500;">Voice</span>
+                    </button>
+                    <button class="header-btn" id="speechToggleBtn" onclick="toggleSpeech()" title="Toggle speech on/off">
+                        <i class="fas fa-volume-up" id="speechIcon"></i>
+                    </button>
+                    <button class="header-btn" onclick="logout()" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <!-- Welcome Message -->
+                <div class="message bot">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <span class="message-sender">Visa Guide AI</span>
+                        <div class="message-bubble">
+                            <p>Hello! I am your Visa Guide AI assistant. How can I help you today with your immigration journey?</p>
+                            <div class="quick-replies">
+                                <button class="quick-reply" onclick="sendMessage('Check my eligibility for green card')">Check green card eligibility</button>
+                                <button class="quick-reply" onclick="sendMessage('What documents do I need for H-1B stamping?')">H-1B stamping documents</button>
+                                <button class="quick-reply" onclick="sendMessage('EB-3 India timeline')">EB-3 India timeline</button>
+                            </div>
+                        </div>
+                        <span class="message-time">Just now</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <div class="chat-input-actions">
+                        <button class="input-action-btn" title="Attach file">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <button class="input-action-btn voice-btn" id="micBtn" onclick="toggleVoiceInput()" title="Voice input">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                    <textarea class="chat-textarea" id="chatInput" placeholder="Type your question here..." rows="1" onkeydown="handleKeyDown(event)" oninput="autoResize(this)"></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div style="margin-top: 0.5rem; text-align: center;">
+                    <span style="font-size: 0.75rem; color: var(--gray-400);">
+                        <i class="fas fa-lock"></i> Your conversations are encrypted and private
+                    </span>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="context-sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Related Resources</div>
+                
+                <div class="suggestion-item" onclick="sendMessage('H-1B transfer timeline')">
+                    <div class="suggestion-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="suggestion-text">
+                        <h4>H-1B Transfer Timeline</h4>
+                        <p>Step-by-step process with deadlines</p>
+                    </div>
+                </div>
+                
+                <div class="suggestion-item" onclick="sendMessage('Premium processing requirements')">
+                    <div class="suggestion-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <div class="suggestion-text">
+                        <h4>Premium Processing</h4>
+                        <p>Requirements and costs for expedited processing</p>
+                    </div>
+                </div>
+                
+                <div class="suggestion-item" onclick="sendMessage('Document checklist for I-485')">
+                    <div class="suggestion-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="suggestion-text">
+                        <h4>I-485 Checklist</h4>
+                        <p>Complete document list for adjustment of status</p>
+                    </div>
+                </div>
+                
+                <div class="suggestion-item" onclick="sendMessage('RFE response strategies')">
+                    <div class="suggestion-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="suggestion-text">
+                        <h4>RFE Strategies</h4>
+                        <p>How to respond to Requests for Evidence</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Your Progress</div>
+                <div class="context-card">
+                    <div style="text-align: center; padding: 0.5rem;">
+                        <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">45%</div>
+                        <div style="font-size: 0.8125rem; color: var(--gray-500);">Immigration journey complete</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Upcoming Deadlines</div>
+                <div class="context-card" style="padding: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-200);">
+                        <div style="width: 32px; height: 32px; background: var(--danger-light); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; color: var(--danger); font-size: 0.875rem;">
+                            <i class="fas fa-exclamation"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.8125rem; font-weight: 600; color: var(--gray-800);">I-485 Response</div>
+                            <div style="font-size: 0.75rem; color: var(--danger);">5 days remaining</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0;">
+                        <div style="width: 32px; height: 32px; background: var(--warning-light); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; color: var(--warning); font-size: 0.875rem;">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.8125rem; font-weight: 600; color: var(--gray-800);">Visa Bulletin</div>
+                            <div style="font-size: 0.75rem; color: var(--gray-500);">January update</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upgrade-card">
+                <h4><i class="fas fa-microphone"></i> Voice Mode</h4>
+                <p>Upgrade to Pro for hands-free voice conversations</p>
+                <button class="upgrade-btn" onclick="showUpgradeModal()">Upgrade - $29/mo</button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Transcript Panel -->
+    <div class="transcript-panel" id="transcriptPanel">
+        <div class="transcript-header">
+            <h4>Live Transcript</h4>
+            <button onclick="toggleTranscript()" style="background: none; border: none; color: var(--gray-500); cursor: pointer;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="transcript-content" id="transcriptContent">
+            <div style="text-align: center; color: var(--gray-500); padding: 1rem;">
+                <i class="fas fa-microphone" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                <p>Voice transcript will appear here</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Mode Modal -->
+    <div class="modal" id="voiceModal">
+        <div class="voice-modal-content">
+            <div class="voice-animation">
+                <i class="fas fa-microphone"></i>
+            </div>
+            <div class="voice-status" id="voiceStatus">Listening...</div>
+            <div class="voice-transcript" id="voiceTranscript">Speak now</div>
+            <button class="voice-close" onclick="closeVoiceModal()">
+                <i class="fas fa-stop"></i> Stop Listening
+            </button>
+        </div>
+    </div>
+
+    <!-- Upgrade Modal -->
+    <div class="modal" id="upgradeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-crown"></i>
+                <h3>Upgrade to Pro</h3>
+                <p>Unlock voice-to-voice chat and premium features</p>
+            </div>
+            <div style="text-align: center;">
+                <div style="background: var(--gray-50); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--gray-200);">
+                        <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                        <span>Unlimited voice conversations</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--gray-200);">
+                        <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                        <span>AI document review (50/month)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--gray-200);">
+                        <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                        <span>Unlimited mock interviews</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0;">
+                        <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                        <span>Priority date predictions</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn" style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); background: transparent; border-radius: var(--radius); cursor: pointer;" onclick="closeUpgradeModal()">Maybe Later</button>
+                    <button class="btn" style="flex: 1; padding: 0.75rem; background: var(--primary); color: white; border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer;">
+                        $29/month
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ CHATBOT STATE ============
+        let conversationHistory = [];
+        let isListening = false;
+        let recognition = null;
+        let synthesis = window.speechSynthesis;
+        let currentTopic = 'general';
+        let speechEnabled = true;
+        
+        // ============ THEME MANAGEMENT ============
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // ============ SESSION VERIFICATION ============
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            if (!isLoggedIn || isLoggedIn !== 'true') {
+                // User not logged in, redirect to auth page
+                window.location.href = 'visa-guide-auth.html';
+                return;
+            }
+            
+            // ============ LOAD USER DATA ============
+            const userData = localStorage.getItem('userData');
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    personalizeChatbot(user);
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
+                }
+            }
+            
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            
+            // Load speech preference
+            const savedSpeech = localStorage.getItem('speechEnabled');
+            if (savedSpeech !== null) {
+                speechEnabled = savedSpeech === 'true';
+                const speechIcon = document.getElementById('speechIcon');
+                if (speechIcon) {
+                    speechIcon.className = speechEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
+                }
+            }
+            
+            // Initialize speech recognition
+            initSpeechRecognition();
+        });
+
+        function personalizeChatbot(user) {
+            const firstName = user.firstName || 'there';
+            // Update welcome message if it exists
+            const welcomeBubble = document.querySelector('.message.bot .message-bubble');
+            if (welcomeBubble) {
+                const firstParagraph = welcomeBubble.querySelector('p');
+                if (firstParagraph) {
+                    firstParagraph.textContent = 'Hello ' + firstName + '! I am your Visa Guide AI assistant. How can I help you today with your immigration journey?';
+                }
+            }
+        }
+
+        // ============ SPEECH RECOGNITION SETUP ============
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+                
+                recognition.onstart = function() {
+                    isListening = true;
+                    updateVoiceUI(true);
+                };
+                
+                recognition.onresult = function(event) {
+                    let interimTranscript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        if (event.results[i].isFinal) {
+                            const finalTranscript = event.results[i][0].transcript;
+                            document.getElementById('chatInput').value = finalTranscript;
+                            updateTranscript('user', finalTranscript);
+                            sendMessage();
+                        } else {
+                            interimTranscript += event.results[i][0].transcript;
+                        }
+                    }
+                    if (interimTranscript) {
+                        document.getElementById('voiceStatus').textContent = 'Listening...';
+                        document.getElementById('voiceTranscript').textContent = interimTranscript;
+                    }
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                    stopListening();
+                    showToast('Voice recognition error: ' + event.error);
+                };
+                
+                recognition.onend = function() {
+                    if (isListening) {
+                        recognition.start(); // Restart if still supposed to be listening
+                    } else {
+                        updateVoiceUI(false);
+                    }
+                };
+            } else {
+                console.log('Speech recognition not supported');
+                document.getElementById('voiceToggleBtn').style.display = 'none';
+                document.getElementById('micBtn').style.display = 'none';
+            }
+        }
+
+        // ============ VOICE FUNCTIONS ============
+        function toggleVoiceInput() {
+            if (!recognition) {
+                // Speech recognition not supported
+                alert('Voice input is not supported in your browser. Please try Chrome, Edge, or Safari.');
+                return;
+            }
+            
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        }
+
+        function startListening() {
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error('Recognition start error:', e);
+            }
+        }
+
+        function stopListening() {
+            isListening = false;
+            if (recognition) {
+                recognition.stop();
+            }
+            updateVoiceUI(false);
+            document.getElementById('voiceStatus').textContent = 'Processing...';
+            document.getElementById('voiceTranscript').textContent = '';
+        }
+
+        function updateVoiceUI(listening) {
+            const micBtn = document.getElementById('micBtn');
+            const voiceToggleBtn = document.getElementById('voiceToggleBtn');
+            
+            if (listening) {
+                micBtn.classList.add('listening');
+                micBtn.querySelector('i').className = 'fas fa-stop';
+                voiceToggleBtn.classList.add('listening');
+            } else {
+                micBtn.classList.remove('listening');
+                micBtn.querySelector('i').className = 'fas fa-microphone';
+                voiceToggleBtn.classList.remove('listening');
+            }
+        }
+
+        function toggleVoiceMode() {
+            // Open voice-only conversation mode
+            document.getElementById('voiceModal').classList.add('active');
+            startListening();
+        }
+
+        function closeVoiceModal() {
+            stopListening();
+            document.getElementById('voiceModal').classList.remove('active');
+        }
+
+        // ============ TEXT-TO-SPEECH ============
+        function speakResponse(text) {
+            if (!synthesis || !speechEnabled) return;
+            
+            // Cancel any ongoing speech
+            synthesis.cancel();
+            
+            // Clean text for speech (remove markdown-like formatting)
+            const cleanText = text.replace(/\*\*/g, '').replace(/<[^>]*>/g, '').replace(/\n/g, '. ');
+            
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.rate = 1;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+            
+            // Try to select an English voice
+            const voices = synthesis.getVoices();
+            const englishVoice = voices.find(function(voice) { return voice.lang.startsWith('en'); });
+            if (englishVoice) {
+                utterance.voice = englishVoice;
+            }
+            
+            synthesis.speak(utterance);
+        }
+
+        function toggleSpeech() {
+            speechEnabled = !speechEnabled;
+            const speechIcon = document.getElementById('speechIcon');
+            
+            if (speechEnabled) {
+                speechIcon.className = 'fas fa-volume-up';
+                showToast('Voice responses enabled');
+            } else {
+                speechIcon.className = 'fas fa-volume-mute';
+                showToast('Voice responses disabled');
+                // Stop any ongoing speech
+                if (synthesis) {
+                    synthesis.cancel();
+                }
+            }
+            
+            localStorage.setItem('speechEnabled', speechEnabled);
+        }
+
+        function logout() {
+            // Clear session data
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userData');
+            localStorage.removeItem('rememberMe');
+            
+            // Redirect to landing page
+            window.location.href = 'index.html';
+        }
+
+        // ============ CHAT FUNCTIONS ============
+        function sendMessage(text) {
+            const input = document.getElementById('chatInput');
+            const message = text || input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage('user', message);
+            conversationHistory.push({ role: 'user', content: message });
+            input.value = '';
+            autoResize(input);
+            updateSendButton();
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Simulate AI response
+            setTimeout(function() {
+                const response = generateAIResponse(message);
+                hideTypingIndicator();
+                addMessage('bot', response);
+                conversationHistory.push({ role: 'bot', content: response });
+                
+                // Speak the response aloud
+                speakResponse(response);
+            }, 1500);
+        }
+
+        function sendQuickPrompt(prompt) {
+            document.getElementById('chatInput').value = prompt;
+            sendMessage();
+        }
+
+        function addMessage(role, content) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const avatar = role === 'bot' ? '<i class="fas fa-robot"></i>' : '<i class="fas fa-user"></i>';
+            const senderName = role === 'bot' ? 'Visa Guide AI' : 'You';
+            const bubbleClass = role === 'bot' ? '' : 'user';
+            
+            const messageHTML = '<div class="message ' + bubbleClass + '">' +
+                '<div class="message-avatar">' +
+                avatar +
+                '</div>' +
+                '<div class="message-content">' +
+                '<span class="message-sender">' + senderName + '</span>' +
+                '<div class="message-bubble">' +
+                formatMessage(content) +
+                '</div>' +
+                '<span class="message-time">Just now</span>' +
+                '</div>' +
+                '</div>';
+            
+            messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function formatMessage(content) {
+            // Basic formatting
+            let formatted = content;
+            
+            // Convert newlines to <br>
+            formatted = formatted.replace(/\n/g, '<br>');
+            
+            // Bold text between ** **
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Convert lists
+            formatted = formatted.replace(/• /g, '&bull; ');
+            
+            return formatted;
+        }
+
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('chatMessages');
+            const typingHTML = '<div class="message bot" id="typingIndicator">' +
+                '<div class="message-avatar">' +
+                '<i class="fas fa-robot"></i>' +
+                '</div>' +
+                '<div class="message-content">' +
+                '<span class="message-sender">Visa Guide AI</span>' +
+                '<div class="message-bubble">' +
+                '<div class="typing-indicator">' +
+                '<span></span>' +
+                '<span></span>' +
+                '<span></span>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+            messagesContainer.insertAdjacentHTML('beforeend', typingHTML);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        // ============ ENHANCED AI RESPONSE GENERATOR ============
+        function generateAIResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            const userData = localStorage.getItem('userData');
+            let user = null;
+            
+            try {
+                if (userData) {
+                    user = JSON.parse(userData);
+                }
+            } catch (e) {
+                console.error('Error parsing user data:', e);
+            }
+            
+            // ============ SMART INTENT DETECTION ============
+            
+            // NAVIGATION/REDIRECT INTENTS - Check these FIRST before other patterns
+            const redirectPatterns = [
+                /send me to|take me to|go to|open|show me|where is|find|find me/i,
+                /(want|need|would like).*?(form|forms|page|dashboard|center)/i,
+                /i want.*?fill|i need.*?fill|let me.*?fill/i,
+                /access|launch|start.*?(form|application)/i
+            ];
+            
+            const isRedirectIntent = redirectPatterns.some(function(pattern) {
+                return pattern.test(lowerMessage);
+            });
+            
+            // GREETING
+            if (/^(hi|hello|hey|good morning|good afternoon|good evening|howdy)/i.test(lowerMessage)) {
+                const name = user ? user.firstName : 'there';
+                return 'Hello ' + name + '! Great to see you!\n\nI am your Visa Guide AI assistant. I can help you with:\n\n* Eligibility questions - "Am I eligible for green card?"\n* Document requirements - "What documents do I need for H-1B?"\n* Form guidance - "Help me fill out I-485"\n* Interview prep - "Tell me about citizenship interview"\n* Case status - "Check my case progress"\n* Deadlines - "When is my next deadline?"\n\nWhat would you like help with today?\n\nQuick Actions:\n* <a href="visa-guide-forms.html">Go to Forms Center</a>\n* <a href="visa-guide-civics.html">Start Civics Practice</a>\n* <a href="visa-guide-dashboard.html">View My Dashboard</a>';
+            }
+            
+            // NAVIGATION/REDIRECT RESPONSES
+            if (isRedirectIntent) {
+                // Check if they want to go to forms
+                if (/form|forms|application/i.test(lowerMessage)) {
+                    return 'I will take you to the Forms Center where you can access and fill out all available immigration forms.\n\n<a href="visa-guide-forms.html" style="display: inline-block; padding: 12px 24px; background: #1e40af; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 10px 0;">📄 Go to Forms Center</a>\n\nThe Forms Center includes:\n* All USCIS forms (N-400, I-485, I-130, I-140, etc.)\n* Step-by-step filing instructions\n* Document checklists for each form\n* Fee information\n\nWould you like guidance on a specific form?';
+                }
+                
+                // Check if they want to go to dashboard
+                if (/dashboard|overview|summary|progress|my page|my account/i.test(lowerMessage)) {
+                    return 'I will take you to your Dashboard where you can see your complete immigration progress.\n\n<a href="visa-guide-dashboard.html" style="display: inline-block; padding: 12px 24px; background: #1e40af; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 10px 0;">📊 Go to Dashboard</a>\n\nYour Dashboard shows:\n* Overall progress on your immigration journey\n* Upcoming deadlines\n* Document checklists\n* Case status updates\n\nLet me know if you need help with anything specific!';
+                }
+                
+                // Check if they want civics/quiz
+                if (/civics|quiz|test|study|learn|practice|question/i.test(lowerMessage)) {
+                    return 'I will take you to the Civics Practice section where you can study and prepare for your citizenship test.\n\n<a href="visa-guide-civics.html" style="display: inline-block; padding: 12px 24px; background: #1e40af; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 10px 0;">🎓 Go to Civics Practice</a>\n\nCivics Practice includes:\n* 100 official civics questions\n* Multiple choice quizzes\n* Study mode\n* Progress tracking\n\nGood luck with your preparation!';
+                }
+                
+                // Default redirect - ask what they want to access
+                return 'I would be happy to help you navigate to the right place! What would you like to access?\n\nOptions:\n* <a href="visa-guide-forms.html">📄 Forms Center</a> - For immigration forms and applications\n* <a href="visa-guide-dashboard.html">📊 Dashboard</a> - For your progress and deadlines\n* <a href="visa-guide-civics.html">🎓 Civics Practice</a> - For citizenship test preparation\n\nJust let me know what you need!';
+            }
+            
+            // ELIGIBILITY
+            if (/eligible|eligibility|can i qualify|do i qualify|check my eligibility/i.test(lowerMessage)) {
+                let interestInfo = '';
+                if (/h1b|h-1b/i.test(lowerMessage)) {
+                    interestInfo = '\n\nFor H-1B Eligibility:\n* Bachelor\'s degree or equivalent in specialty occupation\n* Employer willing to sponsor your petition\n* Labor Condition Application (LCA) filed by employer\n* Subject to annual cap (85,000 slots)\n* Must maintain status throughout employment';
+                } else if (/green.?card|adjustment|i-485|eb-1|eb-2|eb-3/i.test(lowerMessage)) {
+                    interestInfo = '\n\nFor Green Card Eligibility:\n* Employment-based: Job offer from US employer\n* Family-based: US citizen or permanent resident relative\n* Self-petition: EB-1A (extraordinary ability) or EB-2 NIW\n* Priority date must be current per Visa Bulletin\n* Medical examination required\n* Police certificates required';
+                } else if (/citizenship|n-400|naturalization/i.test(lowerMessage)) {
+                    interestInfo = '\n\nFor Citizenship Eligibility:\n* 5 years continuous residence in US, OR\n* 3 years if married to US citizen\n* Physical presence in US (30+ months)\n* Good moral character\n* Pass English and civics test\n* Must be 18 or older';
+                } else {
+                    interestInfo = '\n\nTo determine your eligibility:\n* What type of immigration benefit are you seeking?\n* What is your current visa status?\n* How long have you been in the US?\n\nOr I can check your profile for personalized advice.';
+                }
+                
+                return 'Let me help you check your eligibility' + interestInfo + '\n\nQuick Actions:\n* <a href="visa-guide-dashboard.html">Update Your Profile</a> for personalized assessment\n* <a href="visa-guide-forms.html">View Required Forms</a>\n\nWould you like me to help with any specific eligibility question?';
+            }
+            
+            // DOCUMENTS
+            if (/document|documents|need|required|checklist|what do i need|missing|prepare/i.test(lowerMessage)) {
+                let docType = '';
+                
+                if (/h1b|h-1b|stamping|visa stamp|consulate/i.test(lowerMessage)) {
+                    return 'Here are the documents you need for H-1B visa stamping:\n\nRequired Documents:\n* Valid passport (6+ months validity)\n* I-797 approval notice\n* I-129 petition receipt\n* Recent pay stubs (last 3 months)\n* Employment verification letter\n* Bachelor\'s degree and transcripts\n* Labor Condition Application (LCA)\n* Tax returns (last 2 years)\n* DS-160 confirmation page\n* Visa fee receipt\n* 2x2 photograph (white background)\n\nTips:\n* Make 2 copies of all documents\n* Organize in a folder\n* Bring originals and copies\n\n<a href="visa-guide-forms.html">📄 View Complete Checklist</a>';
+                } else if (/green card|adjustment|i-485/i.test(lowerMessage)) {
+                    return 'Here are the documents you need for I-485 Adjustment of Status:\n\nRequired Documents:\n* Completed and signed I-485 form\n* Birth certificate (original or certified copy)\n* Passport photos (2 new photos)\n* I-94 arrival/departure record\n* Medical examination (Form I-693)\n* Police certificates from all places lived (18+)\n* Tax returns (last 3 years)\n* Employment authorization documents\n* Marriage certificate (if applicable)\n* Divorce/death certificates (if applicable)\n\nTips:\n* Medical must be with civil surgeon\n* Police certificates take time - request early\n\n<a href="visa-guide-forms.html">📄 Download Document Checklist</a>';
+                } else if (/citizenship|n-400|naturalization/i.test(lowerMessage)) {
+                    return 'Here are the documents you need for N-400 Citizenship application:\n\nRequired Documents:\n* Completed and signed N-400 form\n* Green card (front and back copy)\n* Passport photos (2 new photos)\n* Marriage certificate (if applicable)\n* Divorce/death certificates (if applicable)\n* Tax returns (last 5 years)\n* Travel history (passport stamps)\n\nTips:\n* Gather documents before starting application\n* Make copies of everything\n\n<a href="visa-guide-forms.html">📄 View Complete Checklist</a>';
+                } else {
+                    return 'Here are common documents you may need:\n\nBasic Documents:\n* Valid passport\n* I-94 arrival/departure record\n* Employment authorization document\n* Social Security card\n* Tax returns\n* Birth certificate\n* Marriage certificate\n* Educational credentials\n\n<a href="visa-guide-dashboard.html">📊 Check Your Document Status</a>\n\nWhat type of application are you preparing for? I can give you a specific checklist.';
+                }
+            }
+            
+            // FORMS - More specific detection
+            if (/form|forms|application/i.test(lowerMessage)) {
+                // Check for specific form queries
+                if (/n-400|citizenship|naturalization/i.test(lowerMessage)) {
+                    return 'N-400 Application for Naturalization:\n\nWhat it does: Applies for US citizenship\n\nKey Information:\n* Processing time: 8-12 months average\n* Fee: $640 + $85 biometrics\n* Interview required with civics test\n* Must be 18+ years old\n\nSteps to complete:\n1. Gather required documents\n2. Complete N-400 form\n3. Pay filing fee\n4. Submit application\n5. Schedule biometrics\n6. Attend interview\n7. Take oath ceremony\n\n<a href="visa-guide-forms.html" style="display: inline-block; padding: 10px 20px; background: #1e40af; color: white; text-decoration: none; border-radius: 6px; margin: 10px 0;">📄 Start N-400 Application</a>\n\nWould you like help with any specific part of this form?';
+                }
+                
+                if (/i-485|adjustment|green.?card/i.test(lowerMessage)) {
+                    return 'I-485 Adjustment of Status Application:\n\nWhat it does: Changes your status to permanent resident (green card)\n\nKey Information:\n* Processing time: 10-20 months\n* Fee: $1,225 (or $750 if under 14)\n* Priority date must be current\n* Can file with I-130 or I-140\n\nSteps to complete:\n1. Check priority date availability\n2. Gather all required documents\n3. Complete I-485 form\n4. Get medical examination\n5. Pay filing fee\n6. Submit application\n7. Attend interview if required\n\n<a href="visa-guide-forms.html" style="display: inline-block; padding: 10px 20px; background: #1e40af; color: white; text-decoration: none; border-radius: 6px; margin: 10px 0;">📄 Start I-485 Application</a>\n\nWhat specific help do you need with I-485?';
+                }
+                
+                if (/i-130|family|relative|petition/i.test(lowerMessage)) {
+                    return 'I-130 Petition for Alien Relative:\n\nWhat it does: Establishes family relationship for green card\n\nKey Information:\n* Fee: $535\n* Establishes qualifying relationship\n* Required for family-based green cards\n* Can file online or by mail\n\nWho can you petition:\n* Spouse\n* Unmarried children (any age)\n* Parents (if you are US citizen)\n* Siblings (if you are US citizen)\n\n<a href="visa-guide-forms.html" style="display: inline-block; padding: 10px 20px; background: #1e40af; color: white; text-decoration: none; border-radius: 6px; margin: 10px 0;">📄 File I-130 Petition</a>\n\nWhich family member are you petitioning for?';
+                }
+                
+                if (/i-140|employment|job|worker/i.test(lowerMessage)) {
+                    return 'I-140 Immigrant Petition for Alien Worker:\n\nWhat it does: Establishes employer\'s intent to employ foreign worker\n\nKey Information:\n* Fee: $700\n* EB-1, EB-2, EB-3 categories\n* PERM labor cert required (EB-2/EB-3)\n* Premium processing available (15 days)\n\nCategories:\n* EB-1A: Extraordinary ability\n* EB-1B: Outstanding professor/researcher\n* EB-2: Advanced degree or exceptional ability\n* EB-3: Skilled workers and professionals\n\n<a href="visa-guide-forms.html" style="display: inline-block; padding: 10px 20px; background: #1e40af; color: white; text-decoration: none; border-radius: 6px; margin: 10px 0;">📄 File I-140 Petition</a>\n\nWhat employment category applies to your situation?';
+                }
+                
+                if (/h1b|h-1b|i-129/i.test(lowerMessage)) {
+                    return 'I-129 H-1B Petition:\n\nWhat it does: Petition for H-1B temporary worker status\n\nKey Information:\n* Fee: $460 (+ ACWIA $1500 if applicable)\n* Filed by employer\n* Required for H-1B status\n* Premium processing: 15 days\n\nRequirements:\n* Bachelor\'s degree or equivalent\n* Specialty occupation\n* Employer-employee relationship\n* Labor Condition Application (LCA)\n\nNote: This form must be filed by your employer.\n\n<a href="visa-guide-forms.html" style="display: inline-block; padding: 10px 20px; background: #1e40af; color: white; text-decoration: none; border-radius: 6px; margin: 10px 0;">📄 View I-129 Form</a>\n\nWhat aspect of H-1B do you need help with?';
+                }
+                
+                // Generic forms response
+                return 'Here are the main immigration forms available:\n\nCommon Forms:\n* <a href="visa-guide-forms.html">N-400</a> - Citizenship application\n* <a href="visa-guide-forms.html">I-485</a> - Green card (adjustment of status)\n* <a href="visa-guide-forms.html">I-130</a> - Family petition\n* <a href="visa-guide-forms.html">I-140</a> - Employment petition\n* I-131 - Advance parole\n* I-765 - Work authorization\n\n<a href="visa-guide-forms.html" style="display: inline-block; padding: 12px 24px; background: #1e40af; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 10px 0;">📄 Go to Forms Center</a>\n\nWhich form would you like help with?';
+            }
+            
+            // INTERVIEW
+            if (/interview|interview prep|stamping|consulate|embassy|prepare/i.test(lowerMessage)) {
+                return 'Interview Preparation Guide:\n\nFor Citizenship Interview:\n* Duration: 20-30 minutes with officer\n* Questions about N-400 application\n* English test (reading/writing)\n* Civics test (100 questions, need 6/10 correct)\n\nFor Visa Stamping:\n* Bring all supporting documents\n* Expect questions about job, employer, intentions\n* Officer may ask about ties to home country\n* Stay calm and be honest\n\nCommon Questions:\n* "Why do you want to become a US citizen?"\n* "How long have you been in the US?"\n* "What do you do for work?"\n\n<a href="visa-guide-civics.html">🎓 Practice Civics Questions</a>\n\nWould you like me to help with specific interview questions?';
+            }
+            
+            // DEADLINES
+            if (/deadline|due date|when|timeframe|timeline|how long/i.test(lowerMessage)) {
+                return 'Processing Timelines (Average):\n\n* N-400 Citizenship: 8-12 months\n* I-485 Adjustment: 10-20 months\n* I-130 Petition: 10-14 months\n* I-140 Petition: 4-6 months\n* H-1B Visa: 3-6 months\n* EAD Renewal: 2-4 months\n\nTips:\n* File applications early\n* Respond to RFE within 33 days\n* Track case status online\n\n<a href="visa-guide-dashboard.html">📅 View Your Deadlines</a>\n\nWhat specific timeline are you asking about?';
+            }
+            
+            // STATUS CHECK
+            if (/status|case|check my|track|where is/i.test(lowerMessage)) {
+                return 'Case Status Tracking:\n\nTo check your case:\n1. Go to https://egov.uscis.gov/\n2. Enter your 13-character receipt number\n3. View current status and updates\n\nReceipt Number Format:\n* Starts with 3 letters (EAC, WAC, SRC, etc.)\n* Followed by 10 numbers\n\nCommon Statuses:\n* "Case Received" - Initial acknowledgment\n* "Case Is Being Actively Reviewed" - Processing\n* "Request for Evidence Sent" - RFE issued\n* "Interview Scheduled" - Next step\n* "Case Approved" - Success!\n\n<a href="visa-guide-dashboard.html">📊 View Your Dashboard</a>\n\nWould you like help understanding a specific status?';
+            }
+            
+            // FEES
+            if (/fee|fees|cost|price|payment|how much/i.test(lowerMessage)) {
+                return 'USCIS Filing Fees:\n\n* N-400 Citizenship: $725 (includes biometrics)\n* I-485 Adjustment: $1,225 ($750 for children under 14)\n* I-130 Petition: $535\n* I-140 Petition: $700\n* I-765 Work Permit: $550\n* I-131 Advance Parole: $585\n\nPayment Methods:\n* Check or money order (USPS)\n* Credit card (online only)\n\nFee Waivers:\n* Available if income below 150% poverty level\n* Use Form I-912\n\n<a href="visa-guide-forms.html">💰 Fee Calculator</a>\n\nWhich fee do you need details about?';
+            }
+            
+            // CIVICS / TEST
+            if (/civics|test|study|learn|questions|history|government/i.test(lowerMessage)) {
+                return 'Civics Test Preparation:\n\nTest Format:\n* 100 civics questions\n* Must answer 6 out of 10 correctly\n* Multiple choice format\n\nTopics Covered:\n* American Government\n* American History\n* Integrated Civics\n\n<a href="visa-guide-civics.html" style="display: inline-block; padding: 12px 24px; background: #1e40af; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 10px 0;">🎓 Start Practice Quiz</a>\n\nWould you like to start practicing now?';
+            }
+            
+            // H-1B SPECIFIC
+            if (/h1b|h-1b|cap|lottery|renew|transfer/i.test(lowerMessage)) {
+                return 'H-1B Visa Information:\n\nAnnual Cap: 85,000 slots\n* 65,000 regular cap\n* 20,000 master\'s cap exemption\n\nKey Requirements:\n* Bachelor\'s degree or equivalent\n* Specialty occupation\n* Employer sponsorship\n* Labor Condition Application (LCA)\n\nIf transfer:\n* No cap subject if maintaining status\n* New employer files I-129\n* Can start upon filing if portability applies\n\nTimeline:\n* Registration: March\n* Filing: April 1st\n* Processing: 3-6 months\n* Premium: 15 days\n\n<a href="visa-guide-forms.html">📄 View H-1B Forms</a>\n\nWhat aspect of H-1B do you need help with?';
+            }
+            
+            // GREEN CARD / EMPLOYMENT
+            if (/green.?card|employment.?based|eb-1|eb-2|eb-3|priority date/i.test(lowerMessage)) {
+                return 'Employment-Based Green Card:\n\nCategories:\n* EB-1: Priority Workers (no PERM needed)\n* EB-2: Advanced Degree Professionals (PERM needed)\n* EB-3: Skilled Workers (PERM needed)\n\nProcess:\n1. PERM Labor Certification\n2. I-140 Immigrant Petition\n3. I-485 Adjustment of Status\n\nPriority Dates:\n* Check Visa Bulletin monthly\n* India: Currently EB-3 at 2012\n* China: Currently EB-2 at 2020\n* Other countries: Current in EB-1/2\n\n<a href="visa-guide-forms.html">📄 View Green Card Forms</a>\n\n<a href="visa-guide-dashboard.html">📊 Check Your Priority Date</a>\n\nWhat specific question do you have?';
+            }
+            
+            // DEFAULT RESPONSE - More helpful
+            return 'I understand you are asking about "' + message + '". Here is how I can help:\n\nTopics I Can Assist With:\n\n📋 **Visa Questions**\n* H-1B, L-1, O-1, F-1, etc.\n\n💳 **Green Cards**\n* Employment-based (EB-1, EB-2, EB-3)\n* Family-based\n\n📄 **Forms**\n* N-400, I-485, I-130, I-140, etc.\n\n📋 **Documents**\n* Required documents\n* Checklists\n\n📅 **Timelines**\n* Processing times\n* Deadlines\n\n🎓 **Citizenship**\n* Civics test prep\n* Interview tips\n\nQuick Links:\n* <a href="visa-guide-forms.html">📄 Forms Center</a>\n* <a href="visa-guide-dashboard.html">📊 Your Dashboard</a>\n* <a href="visa-guide-civics.html">🎓 Civics Practice</a>\n\nCan you provide more details about your question? For example:\n- What visa type are you applying for?\n- What stage of the process are you in?\n- What specific help do you need?\n\nI am here to help!';
+        }
+
+        // ============ UI FUNCTIONS ============
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+            updateSendButton();
+        }
+
+        function updateSendButton() {
+            const input = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = !input.value.trim();
+        }
+
+        function switchTopic(topic) {
+            currentTopic = topic;
+            document.querySelectorAll('.topic-btn').forEach(function(btn) { btn.classList.remove('active'); });
+            event.target.closest('.topic-btn').classList.add('active');
+            
+            const topicNames = {
+                'general': 'General Questions',
+                'eligibility': 'Eligibility Check',
+                'documents': 'Document Help',
+                'interview': 'Interview Prep',
+                'forms': 'Forms Guidance',
+                'deadlines': 'Deadlines'
+            };
+            
+            addMessage('bot', 'Switched to ' + topicNames[topic] + ' mode. How can I help you with ' + topic.toLowerCase() + ' questions?');
+        }
+
+        function clearChat() {
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = '<div class="message bot">' +
+                '<div class="message-avatar">' +
+                '<i class="fas fa-robot"></i>' +
+                '</div>' +
+                '<div class="message-content">' +
+                '<span class="message-sender">Visa Guide AI</span>' +
+                '<div class="message-bubble">' +
+                '<p>Chat cleared! How can I help you today?</p>' +
+                '<div class="quick-replies">' +
+                '<button class="quick-reply" onclick="sendMessage(\'Check my eligibility for green card\')">Check green card eligibility</button>' +
+                '<button class="quick-reply" onclick="sendMessage(\'What documents do I need for H-1B stamping?\')">H-1B stamping documents</button>' +
+                '<button class="quick-reply" onclick="sendMessage(\'EB-3 India timeline\')">EB-3 India timeline</button>' +
+                '</div>' +
+                '</div>' +
+                '<span class="message-time">Just now</span>' +
+                '</div>' +
+                '</div>';
+            conversationHistory = [];
+        }
+
+        function toggleTranscript() {
+            document.getElementById('transcriptPanel').classList.toggle('active');
+        }
+
+        function updateTranscript(role, text) {
+            const content = document.getElementById('transcriptContent');
+            const label = role === 'user' ? 'You said:' : 'AI responded:';
+            
+            const existingContent = content.innerHTML;
+            if (existingContent.includes('Voice transcript will appear')) {
+                content.innerHTML = '';
+            }
+            
+            const transcriptHTML = '<div class="transcript-item">' +
+                '<div class="transcript-label">' + label + '</div>' +
+                '<div class="transcript-text">' + text + '</div>' +
+                '</div>';
+            
+            content.insertAdjacentHTML('beforeend', transcriptHTML);
+        }
+
+        function showUpgradeModal() {
+            document.getElementById('upgradeModal').classList.add('active');
+        }
+
+        function closeUpgradeModal() {
+            document.getElementById('upgradeModal').classList.remove('active');
+        }
+
+        function showToast(message) {
+            alert(message);
+        }
+
+        // Close modals on outside click
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        // Close on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeVoiceModal();
+                closeUpgradeModal();
+            }
+        });
+
+        console.log('Visa Guide AI - Chatbot Module loaded successfully');
+        console.log('Module: AI Chat Assistant v2.0 with Voice Capabilities');
+        
+        // Initialize Firebase
+        if (typeof FirebaseCore !== 'undefined') {
+            FirebaseCore.initialize(firebaseConfig);
+            console.log('Firebase integration ready');
+            
+            // Initialize Data Sync for chat history
+            if (typeof DataSync !== 'undefined') {
+                window.dataSync = new DataSync();
+            }
+        }
+    </script>
+</body>
+</html>

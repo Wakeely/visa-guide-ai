@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Visa Guide AI - U.S. Civics Test Preparation">
+    <title>Visa Guide AI - Civics Test Prep</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <style>
+        /* ============ CSS VARIABLES ============ */
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary: #6366f1;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --success-bg: #ecfdf5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --warning-bg: #fffbeb;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --danger-bg: #fef2f2;
+            --info: #0ea5e9;
+            --info-light: #e0f2fe;
+            --info-bg: #eff6ff;
+            
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            --white: #ffffff;
+            --black: #000000;
+            
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            
+            --radius: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --radius-full: 9999px;
+            
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --gray-50: #0f172a;
+            --gray-100: #1e293b;
+            --gray-200: #334155;
+            --gray-300: #475569;
+            --gray-400: #64748b;
+            --gray-500: #94a3b8;
+            --gray-600: #cbd5e1;
+            --gray-700: #e2e8f0;
+            --gray-800: #f1f5f9;
+            --gray-900: #f8fafc;
+            --white: #0f172a;
+            --black: #ffffff;
+            --success-light: #064e3b;
+            --success-bg: #022c22;
+            --warning-light: #78350f;
+            --warning-bg: #451a03;
+            --danger-light: #7f1d1d;
+            --danger-bg: #450a0a;
+            --info-light: #0c4a6e;
+            --info-bg: #082f49;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] body {
+            background-color: var(--gray-900);
+            color: var(--gray-200);
+        }
+
+        /* ============ NAVIGATION ============ */
+        .navbar {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .navbar {
+            background: var(--gray-100);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.375rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-brand i {
+            font-size: 1.625rem;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            color: var(--gray-600);
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 0.9375rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        [data-theme="dark"] .nav-link {
+            color: var(--gray-400);
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary);
+            background: var(--gray-100);
+            text-decoration: none;
+        }
+
+        [data-theme="dark"] .nav-link:hover, [data-theme="dark"] .nav-link.active {
+            background: var(--gray-200);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        [data-theme="dark"] .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            background: var(--gray-100);
+            border: none;
+            color: var(--gray-600);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: var(--gray-200);
+            color: var(--gray-400);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* ============ MAIN LAYOUT ============ */
+        .prep-layout {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        /* ============ SIDEBAR ============ */
+        .prep-sidebar {
+            position: sticky;
+            top: 90px;
+            height: fit-content;
+        }
+
+        .sidebar-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            margin-bottom: 1.5rem;
+        }
+
+        [data-theme="dark"] .sidebar-card {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .sidebar-title {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gray-400);
+            margin-bottom: 1rem;
+            padding: 0 0.25rem;
+        }
+
+        /* Progress Card */
+        .progress-circle {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 1rem;
+            position: relative;
+        }
+
+        .progress-circle svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-circle-bg {
+            fill: none;
+            stroke: var(--gray-200);
+            stroke-width: 10;
+        }
+
+        [data-theme="dark"] .progress-circle-bg {
+            stroke: var(--gray-300);
+        }
+
+        .progress-circle-fill {
+            fill: none;
+            stroke: var(--success);
+            stroke-width: 10;
+            stroke-linecap: round;
+            stroke-dasharray: 377;
+            stroke-dashoffset: 377;
+            transition: stroke-dashoffset 1s ease;
+        }
+
+        .progress-circle-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .progress-percentage {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            line-height: 1;
+        }
+
+        [data-theme="dark"] .progress-percentage {
+            color: var(--gray-100);
+        }
+
+        .progress-label {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-top: 0.25rem;
+        }
+
+        [data-theme="dark"] .progress-label {
+            color: var(--gray-400);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .stats-row {
+            border-color: var(--gray-300);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        [data-theme="dark"] .stat-value {
+            color: var(--primary-light);
+        }
+
+        .stat-label {
+            font-size: 0.6875rem;
+            color: var(--gray-500);
+            text-transform: uppercase;
+        }
+
+        [data-theme="dark"] .stat-label {
+            color: var(--gray-400);
+        }
+
+        /* Study Modes */
+        .mode-list {
+            list-style: none;
+        }
+
+        .mode-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .mode-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid var(--gray-200);
+            background: var(--white);
+            border-radius: var(--radius);
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: left;
+        }
+
+        [data-theme="dark"] .mode-btn {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+            color: var(--gray-300);
+        }
+
+        .mode-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        [data-theme="dark"] .mode-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+        }
+
+        .mode-btn.active {
+            border-color: var(--primary);
+            background: var(--info-light);
+            color: var(--primary);
+        }
+
+        [data-theme="dark"] .mode-btn.active {
+            background: var(--info);
+            color: white;
+        }
+
+        .mode-btn i {
+            font-size: 1.125rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .mode-info {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: var(--gray-400);
+        }
+
+        .mode-btn.active .mode-info {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .mode-btn.active .mode-info {
+            color: white;
+        }
+
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .quick-stat {
+            background: var(--gray-50);
+            border-radius: var(--radius);
+            padding: 0.875rem;
+            text-align: center;
+            border: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .quick-stat {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+        }
+
+        .quick-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        [data-theme="dark"] .quick-stat-value {
+            color: var(--gray-100);
+        }
+
+        .quick-stat-label {
+            font-size: 0.6875rem;
+            color: var(--gray-500);
+            margin-top: 0.125rem;
+        }
+
+        [data-theme="dark"] .quick-stat-label {
+            color: var(--gray-400);
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .prep-main {
+            min-width: 0;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        [data-theme="dark"] .page-title {
+            color: var(--gray-100);
+        }
+
+        .page-subtitle {
+            color: var(--gray-500);
+            font-size: 0.9375rem;
+        }
+
+        [data-theme="dark"] .page-subtitle {
+            color: var(--gray-400);
+        }
+
+        /* Stats Banner */
+        .stats-banner {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-banner {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .stat-banner {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .stat-banner:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-banner-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .stat-banner-icon.learned {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        [data-theme="dark"] .stat-banner-icon.learned {
+            background: var(--success);
+            color: white;
+        }
+
+        .stat-banner-icon.needs-review {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        [data-theme="dark"] .stat-banner-icon.needs-review {
+            background: var(--warning);
+            color: white;
+        }
+
+        .stat-banner-icon.not-learned {
+            background: var(--gray-100);
+            color: var(--gray-500);
+        }
+
+        [data-theme="dark"] .stat-banner-icon.not-learned {
+            background: var(--gray-200);
+            color: var(--gray-400);
+        }
+
+        .stat-banner-icon.today {
+            background: var(--info-light);
+            color: var(--info);
+        }
+
+        [data-theme="dark"] .stat-banner-icon.today {
+            background: var(--info);
+            color: white;
+        }
+
+        .stat-banner-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        [data-theme="dark"] .stat-banner-value {
+            color: var(--gray-100);
+        }
+
+        .stat-banner-label {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+        }
+
+        [data-theme="dark"] .stat-banner-label {
+            color: var(--gray-400);
+        }
+
+        /* Question Display Area */
+        .question-area {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            margin-bottom: 1.5rem;
+        }
+
+        [data-theme="dark"] .question-area {
+            background: var(--gray-100);
+            border-color: var(--gray-200);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-progress {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .question-number {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+
+        [data-theme="dark"] .question-number {
+            color: var(--gray-400);
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .progress-bar {
+            background: var(--gray-300);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: var(--radius-full);
+            transition: width 0.3s ease;
+        }
+
+        .question-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-200);
+            background: var(--white);
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        [data-theme="dark"] .action-btn {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+            color: var(--gray-400);
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .action-btn.audio-btn {
+            background: var(--info-light);
+            border-color: var(--info);
+            color: var(--info);
+        }
+
+        [data-theme="dark"] .action-btn.audio-btn {
+            background: var(--info);
+            color: white;
+        }
+
+        .action-btn.audio-btn:hover {
+            background: var(--info);
+            color: white;
+        }
+
+        .question-text {
+            font-size: 1.375rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 2rem;
+            line-height: 1.4;
+        }
+
+        [data-theme="dark"] .question-text {
+            color: var(--gray-100);
+        }
+
+        /* Answer Options */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            background: var(--gray-50);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .option-item {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+        }
+
+        .option-item:hover {
+            border-color: var(--primary);
+            background: var(--info-light);
+        }
+
+        [data-theme="dark"] .option-item:hover {
+            background: var(--info);
+        }
+
+        .option-item.selected {
+            border-color: var(--primary);
+            background: var(--info-light);
+        }
+
+        [data-theme="dark"] .option-item.selected {
+            background: var(--info);
+        }
+
+        .option-item.correct {
+            border-color: var(--success);
+            background: var(--success-light);
+        }
+
+        [data-theme="dark"] .option-item.correct {
+            background: var(--success);
+            color: white;
+        }
+
+        .option-item.incorrect {
+            border-color: var(--danger);
+            background: var(--danger-light);
+        }
+
+        [data-theme="dark"] .option-item.incorrect {
+            background: var(--danger);
+            color: white;
+        }
+
+        .option-letter {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--gray-200);
+            color: var(--gray-700);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        [data-theme="dark"] .option-letter {
+            background: var(--gray-300);
+            color: var(--gray-200);
+        }
+
+        .option-item.selected .option-letter {
+            background: var(--primary);
+            color: white;
+        }
+
+        .option-item.correct .option-letter {
+            background: var(--success);
+            color: white;
+        }
+
+        .option-item.incorrect .option-letter {
+            background: var(--danger);
+            color: white;
+        }
+
+        .option-text {
+            flex: 1;
+            font-weight: 500;
+            color: var(--gray-800);
+        }
+
+        [data-theme="dark"] .option-text {
+            color: var(--gray-200);
+        }
+
+        .option-result {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .option-item.correct .option-result,
+        .option-item.incorrect .option-result {
+            display: flex;
+        }
+
+        .option-item.correct .option-result {
+            background: var(--success);
+            color: white;
+        }
+
+        .option-item.incorrect .option-result {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Answer Section */
+        .answer-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            display: none;
+        }
+
+        [data-theme="dark"] .answer-section {
+            border-color: var(--gray-300);
+        }
+
+        .answer-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .answer-result {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+        }
+
+        .answer-result.correct {
+            background: var(--success-bg);
+            border: 1px solid var(--success);
+        }
+
+        [data-theme="dark"] .answer-result.correct {
+            background: var(--success-bg);
+        }
+
+        .answer-result.incorrect {
+            background: var(--danger-bg);
+            border: 1px solid var(--danger);
+        }
+
+        [data-theme="dark"] .answer-result.incorrect {
+            background: var(--danger-bg);
+        }
+
+        .answer-result-icon {
+            font-size: 1.5rem;
+        }
+
+        .answer-result.correct .answer-result-icon {
+            color: var(--success);
+        }
+
+        .answer-result.incorrect .answer-result-icon {
+            color: var(--danger);
+        }
+
+        .answer-result-text {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        [data-theme="dark"] .answer-result-text {
+            color: var(--gray-100);
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-light);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        [data-theme="dark"] .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-300);
+            border-color: var(--gray-400);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--gray-200);
+            color: var(--gray-800);
+        }
+
+        [data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+            background: var(--gray-300);
+            color: var(--gray-200);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Results Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            padding: 2.5rem;
+            animation: modalIn 0.3s ease;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: var(--gray-100);
+        }
+
+        @keyframes modalIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .results-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 0 auto 1.5rem;
+        }
+
+        .results-icon.success {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        [data-theme="dark"] .results-icon.success {
+            background: var(--success);
+            color: white;
+        }
+
+        .results-icon.partial {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        [data-theme="dark"] .results-icon.partial {
+            background: var(--warning);
+            color: white;
+        }
+
+        .results-icon.fail {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        [data-theme="dark"] .results-icon.fail {
+            background: var(--danger);
+            color: white;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        [data-theme="dark"] .results-title {
+            color: var(--gray-100);
+        }
+
+        .results-score {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .results-stats {
+            color: var(--gray-600);
+            margin-bottom: 1.5rem;
+        }
+
+        [data-theme="dark"] .results-stats {
+            color: var(--gray-400);
+        }
+
+        .results-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+
+        /* Audio Player */
+        .audio-player {
+            background: var(--info-light);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        [data-theme="dark"] .audio-player {
+            background: var(--info);
+        }
+
+        .audio-play-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--white);
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            transition: var(--transition);
+        }
+
+        .audio-play-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .audio-info {
+            flex: 1;
+        }
+
+        .audio-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+        }
+
+        [data-theme="dark"] .audio-title {
+            color: var(--gray-100);
+        }
+
+        .audio-wave {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            height: 24px;
+        }
+
+        .audio-wave span {
+            width: 3px;
+            background: var(--info);
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        [data-theme="dark"] .audio-wave span {
+            background: white;
+        }
+
+        .audio-wave span:nth-child(1) { height: 8px; animation-delay: 0s; }
+        .audio-wave span:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+        .audio-wave span:nth-child(3) { height: 12px; animation-delay: 0.2s; }
+        .audio-wave span:nth-child(4) { height: 20px; animation-delay: 0.3s; }
+        .audio-wave span:nth-child(5) { height: 8px; animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.5); }
+        }
+
+        .audio-wave.playing span {
+            animation-play-state: running;
+        }
+
+        .audio-wave span {
+            animation-play-state: paused;
+        }
+
+        /* Start Screen */
+        .start-screen {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+
+        .start-screen h2 {
+            font-size: 1.5rem;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        [data-theme="dark"] .start-screen h2 {
+            color: var(--gray-100);
+        }
+
+        .start-screen p {
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+        }
+
+        [data-theme="dark"] .start-screen p {
+            color: var(--gray-400);
+        }
+
+        .start-options {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .start-option {
+            background: var(--white);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            width: 200px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .start-option {
+            background: var(--gray-100);
+            border-color: var(--gray-300);
+        }
+
+        .start-option:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .start-option i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .start-option h4 {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+        }
+
+        [data-theme="dark"] .start-option h4 {
+            color: var(--gray-100);
+        }
+
+        .start-option p {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+            margin: 0;
+        }
+
+        [data-theme="dark"] .start-option p {
+            color: var(--gray-400);
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 1200px) {
+            .stats-banner {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .prep-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .prep-sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .stats-banner {
+                grid-template-columns: 1fr;
+            }
+
+            .question-area {
+                padding: 1.5rem;
+            }
+
+            .question-text {
+                font-size: 1.125rem;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .nav-buttons .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* ============ SCROLLBAR ============ */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 3px;
+        }
+
+        [data-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: var(--gray-500);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-passport"></i>
+                Visa Guide Ai
+            </a>
+            
+            <ul class="navbar-nav">
+                <li><a href="#" class="nav-link"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="#" class="nav-link"><i class="fas fa-road"></i> Roadmap</a></li>
+                <li><a href="#" class="nav-link"><i class="fas fa-file-alt"></i> Forms</a></li>
+                <li><a href="#" class="nav-link"><i class="fas fa-comments"></i> Chat</a></li>
+                <li><a href="#" class="nav-link active"><i class="fas fa-graduation-cap"></i> Civics</a></li>
+            </ul>
+            
+            <div class="navbar-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="prep-layout">
+        <!-- Sidebar -->
+        <aside class="prep-sidebar">
+            <!-- Progress Card -->
+            <div class="sidebar-card">
+                <div class="sidebar-title">Your Progress</div>
+                <div class="progress-circle">
+                    <svg width="140" height="140">
+                        <circle class="progress-circle-bg" cx="70" cy="70" r="60"></circle>
+                        <circle class="progress-circle-fill" id="progressCircle" cx="70" cy="70" r="60"></circle>
+                    </svg>
+                    <div class="progress-circle-text">
+                        <div class="progress-percentage" id="progressPercentage">0%</div>
+                        <div class="progress-label">Mastered</div>
+                    </div>
+                </div>
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <div class="stat-value" id="learnedCount">0</div>
+                        <div class="stat-label">Learned</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="remainingCount">100</div>
+                        <div class="stat-label">Remaining</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Study Modes -->
+            <div class="sidebar-card">
+                <div class="sidebar-title">Study Modes</div>
+                <ul class="mode-list">
+                    <li class="mode-item">
+                        <button class="mode-btn active" onclick="setMode('practice')">
+                            <i class="fas fa-pen"></i>
+                            Practice Mode
+                            <span class="mode-info">Learn as you go</span>
+                        </button>
+                    </li>
+                    <li class="mode-item">
+                        <button class="mode-btn" onclick="setMode('quiz')">
+                            <i class="fas fa-clipboard-check"></i>
+                            Quiz Mode
+                            <span class="mode-info">10 questions</span>
+                        </button>
+                    </li>
+                    <li class="mode-item">
+                        <button class="mode-btn" onclick="setMode('quick')">
+                            <i class="fas fa-bolt"></i>
+                            Quick Review
+                            <span class="mode-info">5 random</span>
+                        </button>
+                    </li>
+                    <li class="mode-item">
+                        <button class="mode-btn" onclick="setMode('full')">
+                            <i name="list"></i>
+                            Full Test
+                            <span class="mode-info">All 100 Qs</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="sidebar-card">
+                <div class="sidebar-title">Today's Progress</div>
+                <div class="quick-stats">
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="todayQuestions">0</div>
+                        <div class="quick-stat-label">Questions</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="todayAccuracy">0%</div>
+                        <div class="quick-stat-label">Accuracy</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="todayStreak">0</div>
+                        <div class="quick-stat-label">Day Streak</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="todayTime">0m</div>
+                        <div class="quick-stat-label">Time Spent</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="prep-main">
+            <div class="page-header">
+                <h1 class="page-title">U.S. Civics Test Preparation</h1>
+                <p class="page-subtitle">Practice with the 100 official civics questions for the naturalization test</p>
+            </div>
+
+            <!-- Stats Banner -->
+            <div class="stats-banner">
+                <div class="stat-banner">
+                    <div class="stat-banner-icon learned">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div>
+                        <div class="stat-banner-value" id="bannerLearned">0</div>
+                        <div class="stat-banner-label">Questions Learned</div>
+                    </div>
+                </div>
+                <div class="stat-banner">
+                    <div class="stat-banner-icon needs-review">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div>
+                        <div class="stat-banner-value" id="bannerReview">0</div>
+                        <div class="stat-banner-label">Needs Review</div>
+                    </div>
+                </div>
+                <div class="stat-banner">
+                    <div class="stat-banner-icon not-learned">
+                        <i class="fas fa-circle"></i>
+                    </div>
+                    <div>
+                        <div class="stat-banner-value" id="bannerNotLearned">100</div>
+                        <div class="stat-banner-label">Not Learned</div>
+                    </div>
+                </div>
+                <div class="stat-banner">
+                    <div class="stat-banner-icon today">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div>
+                        <div class="stat-banner-value" id="bannerQuestions">0</div>
+                        <div class="stat-banner-label">Answered Today</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Area -->
+            <div class="question-area" id="questionArea">
+                <div class="start-screen" id="startScreen">
+                    <h2>Welcome to Civics Practice!</h2>
+                    <p>Choose how you want to practice today</p>
+                    <div class="start-options">
+                        <div class="start-option" onclick="startPractice()">
+                            <i class="fas fa-play"></i>
+                            <h4>Practice</h4>
+                            <p>Learn at your pace</p>
+                        </div>
+                        <div class="start-option" onclick="startQuiz()">
+                            <i class="fas fa-clipboard-check"></i>
+                            <h4>Take Quiz</h4>
+                            <p>10 random questions</p>
+                        </div>
+                        <div class="start-option" onclick="startReview()">
+                            <i class="fas fa-bolt"></i>
+                            <h4>Quick Review</h4>
+                            <p>5 random questions</p>
+                        </div>
+                        <div class="start-option" onclick="startFullTest()">
+                            <i class="fas fa-list-ol"></i>
+                            <h4>Full Test</h4>
+                            <p>All 100 questions</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="questionContent" style="display: none;">
+                    <div class="audio-player">
+                        <button class="audio-play-btn" id="audioPlayBtn" onclick="toggleAudio()">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <div class="audio-info">
+                            <div class="audio-title">Civics Question Audio</div>
+                            <div class="audio-wave" id="audioWave">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="question-header">
+                        <div class="question-progress">
+                            <span class="question-number" id="questionNumber">Question 1 of 10</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 10%;"></div>
+                            </div>
+                        </div>
+                        <div class="question-actions">
+                            <button class="action-btn" onclick="markForReview()" title="Mark for review">
+                                <i class="fas fa-bookmark"></i>
+                            </button>
+                            <button class="action-btn" onclick="toggleAudio()" title="Play audio">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="question-text" id="questionText">
+                        What is the supreme law of the land?
+                    </div>
+
+                    <div class="options-list" id="optionsList">
+                        <!-- Options will be rendered here -->
+                    </div>
+
+                    <div class="answer-section" id="answerSection">
+                        <div class="answer-result" id="answerResult">
+                            <i class="fas fa-check-circle answer-result-icon"></i>
+                            <span class="answer-result-text" id="answerResultText">Correct!</span>
+                        </div>
+                        <p id="answerExplanation" style="margin-top: 1rem; color: var(--gray-600);"></p>
+                    </div>
+
+                    <div class="nav-buttons">
+                        <button class="btn btn-secondary" id="prevBtn" onclick="prevQuestion()">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Results Modal -->
+    <div class="modal" id="resultsModal">
+        <div class="modal-content">
+            <div class="results-icon" id="resultsIcon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <h2 class="results-title" id="resultsTitle">Great Job!</h2>
+            <div class="results-score" id="resultsScore">80%</div>
+            <div class="results-stats" id="resultsStats">
+                You got 8 out of 10 questions correct
+            </div>
+            <div class="results-actions">
+                <button class="btn btn-secondary" onclick="closeResultsModal()">Review Answers</button>
+                <button class="btn btn-primary" onclick="restartPractice()">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ CIVICS QUESTIONS DATA ============
+        const civicsQuestions = [
+            { q: "What is the supreme law of the land?", options: ["The Constitution", "Declaration of Independence", "Bill of Rights", "Federalist Papers"], a: 0, category: "American Government" },
+            { q: "What does the Constitution do?", options: ["Sets up government", "Protects basic rights", "Both A and B", "None of the above"], a: 2, category: "American Government" },
+            { q: "The first three words of the Constitution are?", options: ["We the People", "We the Citizens", "We the Nation", "We the Government"], a: 0, category: "American Government" },
+            { q: "What is an amendment?", options: ["Change to Constitution", "New law", "Court ruling", "Executive order"], a: 0, category: "American Government" },
+            { q: "The first ten amendments are called?", options: ["Bill of Rights", "Articles of Confederation", "Federalist Papers", "Declaration of Rights"], a: 0, category: "American Government" },
+            { q: "Name a right from the First Amendment", options: ["Speech", "Religion", "Assembly", "All of the above"], a: 3, category: "American Government" },
+            { q: "How many amendments does the Constitution have?", options: ["10", "23", "27", "33"], a: 2, category: "American Government" },
+            { q: "What branch makes federal laws?", options: ["Congress", "President", "Supreme Court", "The states"], a: 0, category: "American Government" },
+            { q: "Who is in charge of the executive branch?", options: ["The President", "Speaker of House", "Chief Justice", "Senate Majority"], a: 0, category: "American Government" },
+            { q: "What stops one branch from being too powerful?", options: ["Checks and balances", "The President", "The people", "Congress"], a: 0, category: "American Government" },
+            { q: "Who makes federal laws?", options: ["Congress", "The President", "Supreme Court", "State governors"], a: 0, category: "American Government" },
+            { q: "The U.S. Capitol is where?", options: ["Washington, D.C.", "New York", "Philadelphia", "Boston"], a: 0, category: "American Government" },
+            { q: "We elect a President for how many years?", options: ["4", "8", "2", "Life"], a: 0, category: "American Government" },
+            { q: "What is the name of the President's official home?", options: ["White House", "Capitol", "Congress", "Supreme Court"], a: 0, category: "American Government" },
+            { q: "What is the highest court in the U.S.?", options: ["Supreme Court", "Federal Court", "State Court", "District Court"], a: 0, category: "American Government" },
+            { q: "How many U.S. Senators are there?", options: ["100", "50", "435", "538"], a: 0, category: "American Government" },
+            { q: "We elect U.S. Senators for how many years?", options: ["6", "4", "2", "Life"], a: 0, category: "American Government" },
+            { q: "Who does a U.S. Senator represent?", options: ["All people of their state", "Only their city", "Only their party", "The President"], a: 0, category: "American Government" },
+            { q: "How many voting members are in the House of Representatives?", options: ["435", "100", "50", "538"], a: 0, category: "American Government" },
+            { q: "We elect House members for how many years?", options: ["2", "4", "6", "Life"], a: 0, category: "American Government" },
+            { q: "Who does a member of the House represent?", options: ["People of their district", "All people of their state", "The President", "The Senate"], a: 0, category: "American Government" },
+            { q: "What does someone's representative in Congress do for them?", options: ["All of these answers", "Help them get benefits", "Pass laws", "Oversee the government"], a: 0, category: "American Government" },
+            { q: "Who is one of your state's U.S. Senators now?", options: ["[Open-ended - check your state]", "N/A", "N/A", "N/A"], a: 0, category: "American Government" },
+            { q: "What is the name of the Speaker of the House now?", options: ["[Open-ended - check current Speaker]", "N/A", "N/A", "N/A"], a: 0, category: "American Government" },
+            { q: "What are the two major political parties in the U.S.?", options: ["Democratic and Republican", "Green and Libertarian", "Independent and Reform", "Progressive and Conservative"], a: 0, category: "American Government" },
+            { q: "What is the electoral college?", options: ["Process for electing President", "Group of state leaders", "College for politics", "Government institution"], a: 0, category: "American Government" },
+            { q: "Who is the Governor of your state now?", options: ["[Open-ended - check your state]", "N/A", "N/A", "N/A"], a: 0, category: "American Government" },
+            { q: "What is the capital of the United States?", options: ["Washington, D.C.", "New York City", "Philadelphia", "Boston"], a: 0, category: "American Government" },
+            { q: "What are the two parts of the U.S. Congress?", options: ["Senate and House", "House and Court", "President and Congress", "Federal and State"], a: 0, category: "American Government" },
+            { q: "How many U.S. Senators represent your state?", options: ["2", "1", "3", "4"], a: 0, category: "American Government" },
+            { q: "What is one responsibility of a U.S. citizen?", options: ["Serve on a jury", "Pay taxes", "All of these answers", "Vote"], a: 2, category: "American Government" },
+            { q: "When must all men register for the Selective Service?", options: ["At age 18", "At age 21", "At graduation", "When they vote"], a: 0, category: "American Government" },
+            { q: "What is one right only for U.S. citizens?", options: ["Vote in federal elections", "Free speech", "Free religion", "Due process"], a: 0, category: "American Government" },
+            { q: "What is a major race of people living in America?", options: ["All of these answers", "African American", "Asian", "Native American"], a: 0, category: "American Government" },
+            { q: "What is a少数民族 or minority group?", options: ["Race or ethnic group", "Political party", "Religious group", "Age group"], a: 0, category: "American Government" },
+            { q: "What is the economic system in the U.S.?", options: ["Capitalist economy", "Socialist economy", "Communist economy", "Mixed economy"], a: 0, category: "American Government" },
+            { q: "What is the rule of law?", options: ["Everyone must follow the law", "Leaders are above the law", "No laws needed", "Laws don't apply to citizens"], a: 0, category: "American Government" },
+            { q: "When did the Declaration of Independence get adopted?", options: ["July 4, 1776", "July 4, 1787", "July 4, 1865", "July 4, 1945"], a: 0, category: "American History" },
+            { q: "Who wrote the Declaration of Independence?", options: ["Thomas Jefferson", "George Washington", "Benjamin Franklin", "John Adams"], a: 0, category: "American History" },
+            { q: "When was the Constitution written?", options: ["1787", "1776", "1789", "1790"], a: 0, category: "American History" },
+            { q: "The Federalist Papers were written by?", options: ["Hamilton, Madison, Jay", "Washington and Adams", "Jefferson and Franklin", "All of the Founding Fathers"], a: 0, category: "American History" },
+            { q: "What is one thing Benjamin Franklin is famous for?", options: ["All of these answers", "U.S. diplomat", "First Postmaster General", "Writer and inventor"], a: 0, category: "American History" },
+            { q: "What is the Stamp Act?", options: ["Tax on paper goods", "Tax on stamps", "Law about documents", "Import tax"], a: 0, category: "American History" },
+            { q: "What did the Declaration of Independence do?", options: ["Declared independence from Britain", "Created the government", "Established rights", "Ended slavery"], a: 0, category: "American History" },
+            { q: "Who was the first President?", options: ["George Washington", "John Adams", "Thomas Jefferson", "Benjamin Franklin"], a: 0, category: "American History" },
+            { q: "Who was the first President?", options: ["George Washington", "John Adams", "Thomas Jefferson", "Benjamin Franklin"], a: 0, category: "American History" },
+            { q: "What territory did the U.S. buy from France in 1803?", options: ["Louisiana", "Alaska", "California", "Florida"], a: 0, category: "American History" },
+            { q: "Who wrote the Star-Spangled Banner?", options: ["Francis Scott Key", "George Washington", "Thomas Jefferson", "John Adams"], a: 0, category: "American History" },
+            { q: "During the Cold War, what was the main concern?", options: ["Communism and nuclear war", "Economy", "Immigration", "Trade"], a: 0, category: "American History" },
+            { q: "What movement tried to end racial discrimination?", options: ["Civil Rights Movement", "Women's suffrage", "Labor movement", "Environmental movement"], a: 0, category: "American History" },
+            { q: "What did Martin Luther King, Jr. do?", options: ["Fought for civil rights", "Was President", "Wrote Constitution", "Led the military"], a: 0, category: "American History" },
+            { q: "What did Susan B. Anthony do?", options: ["Fought for women's rights", "Led civil rights", "Was first lady", "Wrote Declaration"], a: 0, category: "American History" },
+            { q: "What is one state that was part of the Thirteen Original Colonies?", options: ["New York", "California", "Texas", "Ohio"], a: 0, category: "American History" },
+            { q: "Name one state that was part of the Thirteen Original Colonies.", options: ["Virginia", "California", "Texas", "Florida"], a: 0, category: "American History" },
+            { q: "What is one state that was part of the Thirteen Original Colonies?", options: ["Massachusetts", "Washington", "Oregon", "Nevada"], a: 0, category: "American History" },
+            { q: "Name one state that was part of the Thirteen Original Colonies.", options: ["Pennsylvania", "Arizona", "New Mexico", "Colorado"], a: 0, category: "American History" },
+            { q: "What is one state that was part of the Thirteen Original Colonies?", options: ["Connecticut", "Kansas", "Nebraska", "Iowa"], a: 0, category: "American History" },
+            { q: "Name one state that was part of the Thirteen Original Colonies.", options: ["Maryland", "Alaska", "Hawaii", "Utah"], a: 0, category: "American History" },
+            { q: "What is one state that was part of the Thirteen Original Colonies?", options: ["South Carolina", "Montana", "Wyoming", "Idaho"], a: 0, category: "American History" },
+            { q: "Name one state that was part of the Thirteen Original Colonies.", options: ["New Hampshire", "North Dakota", "South Dakota", "Minnesota"], a: 0, category: "American History" },
+            { q: "What is one state that was part of the Thirteen Original Colonies?", options: ["Georgia", "Kentucky", "Tennessee", "Indiana"], a: 0, category: "American History" },
+            { q: "Name one state that was part of the Thirteen Original Colonies.", options: ["Rhode Island", "Maine", "Vermont", "Michigan"], a: 0, category: "American History" },
+            { q: "What is one state that was part of the Thirteen Original Colonies?", options: ["New Jersey", "Illinois", "Wisconsin", "Missouri"], a: 0, category: "American History" },
+            { q: "Name one state that was part of the Thirteen Original Colonies.", options: ["Delaware", "Louisiana", "Alabama", "Mississippi"], a: 0, category: "American History" },
+            { q: "There are four main U.S. holidays. Name one.", options: ["All of these answers", "Independence Day", "Labor Day", "Thanksgiving"], a: 0, category: "Integrated Civics" },
+            { q: "When is Independence Day celebrated?", options: ["July 4", "January 1", "May 1", "September 1"], a: 0, category: "Integrated Civics" },
+            { q: "Name one of the U.S. holidays.", options: ["Christmas", "All are correct", "Thanksgiving", "Memorial Day"], a: 1, category: "Integrated Civics" },
+            { q: "What is the national anthem of the U.S.?", options: ["The Star-Spangled Banner", "America the Beautiful", "God Bless America", "My Country 'Tis of Thee"], a: 0, category: "Integrated Civics" },
+            { q: "What is the national bird of the U.S.?", options: ["Bald Eagle", "Golden Eagle", "American Robin", "Blue Jay"], a: 0, category: "Integrated Civics" },
+            { q: "What is the national anthem?", options: ["The Star-Spangled Banner", "America the Beautiful", "God Bless America", "Battle Hymn of the Republic"], a: 0, category: "Integrated Civics" },
+            { q: "What is the national mammal?", options: ["American Bison", "Grizzly Bear", "Moose", "Bison"], a: 3, category: "Integrated Civics" },
+            { q: "What is the highest mountain in the U.S.?", options: ["Denali", "Mount Rainier", "Mount Whitney", "Mount Elbert"], a: 0, category: "Integrated Civics" },
+            { q: "What is one major U.S. river?", options: ["Mississippi River", "Colorado River", "Rio Grande", "All of these answers"], a: 3, category: "Integrated Civics" },
+            { q: "Name one major U.S. ocean.", options: ["Pacific Ocean", "Atlantic Ocean", "Indian Ocean", "All of these answers"], a: 3, category: "Integrated Civics" },
+            { q: "What is one major U.S. lake?", options: ["Lake Michigan", "Great Salt Lake", "Lake Okeechobee", "All of these answers"], a: 3, category: "Integrated Civics" },
+            { q: "What is one of the biggest cities in the U.S.?", options: ["All of these answers", "New York", "Los Angeles", "Chicago"], a: 0, category: "Integrated Civics" },
+            { q: "Name one U.S. territory.", options: ["Puerto Rico", "Guam", "U.S. Virgin Islands", "All of these answers"], a: 3, category: "Integrated Civics" },
+            { q: "Where is the Statue of Liberty?", options: ["New York Harbor", "Boston Harbor", "Philadelphia", "Washington D.C."], a: 0, category: "Integrated Civics" }
+        ];
+
+        // ============ STATE ============
+        let currentQuestionIndex = 0;
+        let selectedQuestions = [];
+        let userAnswers = [];
+        let selectedOption = null;
+        let currentMode = 'practice';
+        let questionCount = 10;
+        let answered = false;
+        
+        // Progress tracking
+        let learnedQuestions = new Set();
+        let reviewQuestions = new Set();
+        let todayStats = {
+            questions: 0,
+            correct: 0,
+            streak: 0,
+            time: 0
+        };
+
+        // Audio
+        let isPlaying = false;
+
+        // ============ THEME MANAGEMENT ============
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            loadStats();
+            updateDisplay();
+        });
+
+        // ============ LOAD/SAVE STATS ============
+        function loadStats() {
+            const saved = localStorage.getItem('civicsStats');
+            if (saved) {
+                const stats = JSON.parse(saved);
+                learnedQuestions = new Set(stats.learned || []);
+                reviewQuestions = new Set(stats.review || []);
+                
+                const today = new Date().toDateString();
+                if (stats.lastDate === today) {
+                    todayStats = stats.today || todayStats;
+                } else {
+                    todayStats = todayStats;
+                }
+            }
+        }
+
+        function saveStats() {
+            localStorage.setItem('civicsStats', JSON.stringify({
+                learned: Array.from(learnedQuestions),
+                review: Array.from(reviewQuestions),
+                today: todayStats,
+                lastDate: new Date().toDateString()
+            }));
+        }
+
+        // ============ UPDATE DISPLAY ============
+        function updateDisplay() {
+            const total = civicsQuestions.length;
+            const learned = learnedQuestions.size;
+            const review = reviewQuestions.size;
+            const notLearned = total - learned - review;
+            const percentage = Math.round((learned / total) * 100);
+
+            // Update sidebar
+            document.getElementById('progressPercentage').textContent = percentage + '%';
+            document.getElementById('learnedCount').textContent = learned;
+            document.getElementById('remainingCount').textContent = total - learned;
+            document.getElementById('todayQuestions').textContent = todayStats.questions;
+            document.getElementById('todayAccuracy').textContent = todayStats.questions > 0 ? Math.round((todayStats.correct / todayStats.questions) * 100) + '%' : '0%';
+            document.getElementById('todayStreak').textContent = todayStats.streak;
+            document.getElementById('todayTime').textContent = todayStats.time + 'm';
+
+            // Update banner
+            document.getElementById('bannerLearned').textContent = learned;
+            document.getElementById('bannerReview').textContent = review;
+            document.getElementById('bannerNotLearned').textContent = notLearned;
+            document.getElementById('bannerQuestions').textContent = todayStats.questions;
+
+            // Update progress circle
+            const circle = document.getElementById('progressCircle');
+            const circumference = 2 * Math.PI * 60;
+            const offset = circumference - (percentage / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        // ============ START PRACTICE ============
+        function startPractice() {
+            currentMode = 'practice';
+            questionCount = 10;
+            startTest();
+        }
+
+        function startQuiz() {
+            currentMode = 'quiz';
+            questionCount = 10;
+            startTest();
+        }
+
+        function startReview() {
+            currentMode = 'quick';
+            questionCount = 5;
+            startTest();
+        }
+
+        function startFullTest() {
+            currentMode = 'full';
+            questionCount = 100;
+            startTest();
+        }
+
+        function startTest() {
+            // Shuffle and select questions
+            selectedQuestions = [...civicsQuestions].sort(() => Math.random() - 0.5).slice(0, questionCount);
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            answered = false;
+            selectedOption = null;
+
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('questionContent').style.display = 'block';
+
+            showQuestion();
+        }
+
+        // ============ SHOW QUESTION ============
+        function showQuestion() {
+            const question = selectedQuestions[currentQuestionIndex];
+            answered = false;
+            selectedOption = null;
+
+            // Update progress
+            document.getElementById('questionNumber').textContent = `Question ${currentQuestionIndex + 1} of ${questionCount}`;
+            document.getElementById('progressFill').style.width = ((currentQuestionIndex + 1) / questionCount * 100) + '%';
+
+            // Show question
+            document.getElementById('questionText').textContent = question.q;
+
+            // Show options
+            const optionsList = document.getElementById('optionsList');
+            const letters = ['A', 'B', 'C', 'D'];
+            optionsList.innerHTML = question.options.map((option, i) => `
+                <div class="option-item" onclick="selectOption(${i})" data-index="${i}">
+                    <span class="option-letter">${letters[i]}</span>
+                    <span class="option-text">${option}</span>
+                    <span class="option-result"><i class="fas fa-check"></i></span>
+                </div>
+            `).join('');
+
+            // Hide answer section
+            document.getElementById('answerSection').classList.remove('active');
+
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            document.getElementById('nextBtn').innerHTML = currentQuestionIndex === questionCount - 1 ? 'Finish <i class="fas fa-check"></i>' : 'Next <i class="fas fa-arrow-right"></i>';
+        }
+
+        // ============ SELECT OPTION ============
+        function selectOption(index) {
+            if (answered) return;
+            
+            answered = true;
+            selectedOption = index;
+            const question = selectedQuestions[currentQuestionIndex];
+            const isCorrect = index === question.a;
+
+            // Highlight selected option
+            document.querySelectorAll('.option-item').forEach((item, i) => {
+                item.classList.remove('selected');
+                if (i === index) {
+                    item.classList.add('selected');
+                }
+                if (i === question.a) {
+                    item.classList.add('correct');
+                } else if (i === index && !isCorrect) {
+                    item.classList.add('incorrect');
+                }
+                item.style.pointerEvents = 'none';
+            });
+
+            // Show answer section
+            const answerSection = document.getElementById('answerSection');
+            const answerResult = document.getElementById('answerResult');
+            const answerResultText = document.getElementById('answerResultText');
+            const answerExplanation = document.getElementById('answerExplanation');
+
+            answerSection.classList.add('active');
+            
+            if (isCorrect) {
+                answerResult.className = 'answer-result correct';
+                answerResult.innerHTML = '<i class="fas fa-check-circle answer-result-icon"></i><span class="answer-result-text">Correct! Well done.</span>';
+                learnedQuestions.add(currentQuestionIndex);
+                reviewQuestions.delete(currentQuestionIndex);
+            } else {
+                answerResult.className = 'answer-result incorrect';
+                answerResult.innerHTML = '<i class="fas fa-times-circle answer-result-icon"></i><span class="answer-result-text">Incorrect. The correct answer is ' + question.options[question.a] + '.</span>';
+                reviewQuestions.add(currentQuestionIndex);
+            }
+
+            answerExplanation.innerHTML = `<strong>Explanation:</strong> This question is about ${question.category}. The correct answer is <strong>${question.options[question.a]}</strong>.`;
+
+            // Update stats
+            todayStats.questions++;
+            if (isCorrect) todayStats.correct++;
+            saveStats();
+            updateDisplay();
+
+            // Store answer
+            userAnswers.push({
+                questionIndex: currentQuestionIndex,
+                question: question.q,
+                selectedAnswer: index,
+                correctAnswer: question.a,
+                isCorrect: isCorrect
+            });
+
+            // Update next button
+            document.getElementById('nextBtn').innerHTML = currentQuestionIndex === questionCount - 1 ? 'Finish <i class="fas fa-check"></i>' : 'Next <i class="fas fa-arrow-right"></i>';
+        }
+
+        // ============ NAVIGATION ============
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                showQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < questionCount - 1) {
+                currentQuestionIndex++;
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function markForReview() {
+            reviewQuestions.add(currentQuestionIndex);
+            saveStats();
+            showToast('Question marked for review', 'info');
+        }
+
+        // ============ RESULTS ============
+        function showResults() {
+            const correct = userAnswers.filter(a => a.isCorrect).length;
+            const percentage = Math.round((correct / questionCount) * 100);
+            
+            let icon, title;
+            if (percentage >= 80) {
+                icon = 'success';
+                title = 'Excellent!';
+            } else if (percentage >= 60) {
+                icon = 'partial';
+                title = 'Good Job!';
+            } else {
+                icon = 'fail';
+                title = 'Keep Practicing!';
+            }
+
+            document.getElementById('resultsIcon').className = 'results-icon ' + icon;
+            document.getElementById('resultsIcon').innerHTML = '<i class="fas fa-' + (icon === 'success' ? 'trophy' : icon === 'partial' ? 'thumbs-up' : 'book') + '"></i>';
+            document.getElementById('resultsTitle').textContent = title;
+            document.getElementById('resultsScore').textContent = percentage + '%';
+            document.getElementById('resultsStats').textContent = `You got ${correct} out of ${questionCount} questions correct`;
+
+            document.getElementById('resultsModal').classList.add('active');
+        }
+
+        function closeResultsModal() {
+            document.getElementById('resultsModal').classList.remove('active');
+            restartPractice();
+        }
+
+        function restartPractice() {
+            document.getElementById('questionContent').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'block';
+            document.getElementById('resultsModal').classList.remove('active');
+        }
+
+        // ============ AUDIO ============
+        function toggleAudio() {
+            const btn = document.getElementById('audioPlayBtn');
+            const wave = document.getElementById('audioWave');
+            
+            if (isPlaying) {
+                isPlaying = false;
+                btn.innerHTML = '<i class="fas fa-play"></i>';
+                wave.classList.remove('playing');
+            } else {
+                isPlaying = true;
+                btn.innerHTML = '<i class="fas fa-pause"></i>';
+                wave.classList.add('playing');
+                
+                // Text-to-speech
+                const question = selectedQuestions[currentQuestionIndex];
+                speakText(question.q);
+            }
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.onend = () => {
+                    isPlaying = false;
+                    document.getElementById('audioPlayBtn').innerHTML = '<i class="fas fa-play"></i>';
+                    document.getElementById('audioWave').classList.remove('playing');
+                };
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // ============ MODE SELECTION ============
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.mode-btn').classList.add('active');
+            
+            switch(mode) {
+                case 'practice':
+                    questionCount = 10;
+                    break;
+                case 'quiz':
+                    questionCount = 10;
+                    break;
+                case 'quick':
+                    questionCount = 5;
+                    break;
+                case 'full':
+                    questionCount = 100;
+                    break;
+            }
+        }
+
+        // ============ TOAST ============
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type + ' active';
+            toast.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle') + '"></i><span>' + message + '</span>';
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('active');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        console.log('Visa Guide AI - Civics Test Prep Module loaded successfully');
+        console.log('Module: U.S. Civics Test Preparation v1.0');
+        
+        // Initialize Firebase
+        if (typeof FirebaseCore !== 'undefined') {
+            FirebaseCore.initialize(firebaseConfig);
+            console.log('Firebase integration ready');
+            
+            // Initialize Data Sync for progress tracking
+            if (typeof DataSync !== 'undefined') {
+                window.dataSync = new DataSync();
+            }
+        }
+    </script>
+</body>
+</html>
