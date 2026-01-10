@@ -11,6 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     
     <!-- jsPDF Library for PDF Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -2465,121 +2466,191 @@
             { id: 'tax_returns', name: 'Tax Returns (Last 3 years)', type: 'financial', status: 'missing', date: null, size: null },
             { id: 'marriage_certificate', name: 'Marriage Certificate', type: 'civil', status: 'missing', date: null, size: null },
             { id: 'medical_exam', name: 'Medical Examination (I-693)', type: 'medical', status: 'missing', date: null, size: null }
-        ];
 
-        // ============ INDEXEDDB FILE STORAGE ============
-        // Using IndexedDB to store actual file content for view/download/delete
-        const FileStorage = {
-            dbName: 'VisaGuideFileStorage',
-            dbVersion: 1,
-            storeName: 'documents',
-            db: null,
+        // ============ FIREBASE STORAGE ============
+        // Using Firebase Storage for permanent cloud document storage
+        const FirebaseStorage = {
+            storage: null,
+            storageRef: null,
+            initialized: false,
             
             init: function() {
+                if (this.initialized) return Promise.resolve();
+                
                 return new Promise((resolve, reject) => {
-                    const request = indexedDB.open(this.dbName, this.dbVersion);
-                    
-                    request.onerror = () => {
-                        console.error('IndexedDB error:', request.error);
-                        reject(request.error);
-                    };
-                    
-                    request.onsuccess = () => {
-                        this.db = request.result;
-                        resolve(this.db);
-                    };
-                    
-                    request.onupgradeneeded = (event) => {
-                        const db = event.target.result;
-                        if (!db.objectStoreNames.contains(this.storeName)) {
-                            db.createObjectStore(this.storeName, { keyPath: 'docId' });
+                    try {
+                        // Initialize Firebase Storage using the config
+                        if (typeof firebase !== 'undefined' && firebase.storage) {
+                            this.storage = firebase.storage();
+                            this.storageRef = this.storage.ref();
+                            this.initialized = true;
+                            console.log('Firebase Storage initialized');
+                            resolve();
+                        } else {
+                            reject(new Error('Firebase Storage not available'));
                         }
-                    };
+                    } catch (err) {
+                        console.error('Firebase Storage init error:', err);
+                        reject(err);
+                    }
                 });
             },
             
-            saveFile: function(docId, file, docName) {
+            getUserFolder: function() {
+                // Get current user ID from Firebase Auth
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    throw new Error('User not authenticated');
+                }
+                return this.storageRef.child('users/' + user.uid + '/documents');
+            },
+            
+            uploadFile: function(docId, file) {
                 return new Promise((resolve, reject) => {
-                    if (!this.db) {
-                        reject(new Error('Database not initialized'));
-                        return;
+                    if (!this.initialized) {
+                        this.init().then(() => this._uploadFile(docId, file, resolve, reject))
+                                   .catch(reject);
+                    } else {
+                        this._uploadFile(docId, file, resolve, reject);
                     }
-                    
-                    const transaction = this.db.transaction([this.storeName], 'readwrite');
-                    const store = transaction.objectStore(this.storeName);
-                    
-                    const fileData = {
-                        docId: docId,
-                        docName: docName,
-                        fileName: file.name,
-                        fileType: file.type,
-                        fileSize: file.size,
-                        lastModified: file.lastModified,
-                        uploadedAt: new Date().toISOString(),
-                        fileData: file
-                    };
-                    
-                    const request = store.put(fileData);
-                    
-                    request.onsuccess = () => resolve(fileData);
-                    request.onerror = () => reject(request.error);
                 });
             },
             
-            getFile: function(docId) {
+            _uploadFile: function(docId, file, resolve, reject) {
+                try {
+                    const userFolder = this.getUserFolder();
+                    const fileRef = userFolder.child(docId + '/' + file.name);
+                    const uploadTask = fileRef.put(file);
+                    
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            // Progress - can be used for progress bar
+                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            console.log('Upload progress: ' + progress.toFixed(0) + '%');
+                        },
+                        (error) => {
+                            console.error('Upload error:', error);
+                            reject(error);
+                        },
+                        () => {
+                            // Upload complete
+                            uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                                resolve({
+                                    success: true,
+                                    docId: docId,
+                                    fileName: file.name,
+                                    downloadURL: downloadURL,
+                                    fullPath: fileRef.fullPath
+                                });
+                            }).catch(reject);
+                        }
+                    );
+                } catch (err) {
+                    reject(err);
+                }
+            },
+            
+            getFileURL: function(docId) {
                 return new Promise((resolve, reject) => {
-                    if (!this.db) {
-                        reject(new Error('Database not initialized'));
-                        return;
+                    if (!this.initialized) {
+                        this.init().then(() => this._getFileURL(docId, resolve, reject))
+                                   .catch(reject);
+                    } else {
+                        this._getFileURL(docId, resolve, reject);
                     }
-                    
-                    const transaction = this.db.transaction([this.storeName], 'readonly');
-                    const store = transaction.objectStore(this.storeName);
-                    const request = store.get(docId);
-                    
-                    request.onsuccess = () => resolve(request.result);
-                    request.onerror = () => reject(request.error);
                 });
+            },
+            
+            _getFileURL: function(docId, resolve, reject) {
+                try {
+                    const userFolder = this.getUserFolder();
+                    // List files in the doc folder to get the filename
+                    userFolder.child(docId).listAll().then((result) => {
+                        if (result.items.length > 0) {
+                            const fileRef = result.items[0];
+                            fileRef.getDownloadURL().then(resolve).catch(reject);
+                        } else {
+                            reject(new Error('No file found for document: ' + docId));
+                        }
+                    }).catch(reject);
+                } catch (err) {
+                    reject(err);
+                }
             },
             
             deleteFile: function(docId) {
                 return new Promise((resolve, reject) => {
-                    if (!this.db) {
-                        reject(new Error('Database not initialized'));
-                        return;
+                    if (!this.initialized) {
+                        this.init().then(() => this._deleteFile(docId, resolve, reject))
+                                   .catch(reject);
+                    } else {
+                        this._deleteFile(docId, resolve, reject);
                     }
-                    
-                    const transaction = this.db.transaction([this.storeName], 'readwrite');
-                    const store = transaction.objectStore(this.storeName);
-                    const request = store.delete(docId);
-                    
-                    request.onsuccess = () => resolve();
-                    request.onerror = () => reject(request.error);
                 });
             },
             
-            getAllFiles: function() {
+            _deleteFile: function(docId, resolve, reject) {
+                try {
+                    const userFolder = this.getUserFolder();
+                    userFolder.child(docId).listAll().then((result) => {
+                        if (result.items.length > 0) {
+                            const fileRef = result.items[0];
+                            fileRef.delete().then(resolve).catch(reject);
+                        } else {
+                            resolve(); // No file to delete
+                        }
+                    }).catch(reject);
+                } catch (err) {
+                    reject(err);
+                }
+            },
+            
+            getAllDocuments: function() {
                 return new Promise((resolve, reject) => {
-                    if (!this.db) {
-                        reject(new Error('Database not initialized'));
-                        return;
+                    if (!this.initialized) {
+                        this.init().then(() => this._getAllDocuments(resolve, reject))
+                                   .catch(reject);
+                    } else {
+                        this._getAllDocuments(resolve, reject);
                     }
-                    
-                    const transaction = this.db.transaction([this.storeName], 'readonly');
-                    const store = transaction.objectStore(this.storeName);
-                    const request = store.getAll();
-                    
-                    request.onsuccess = () => resolve(request.result);
-                    request.onerror = () => reject(request.error);
                 });
+            },
+            
+            _getAllDocuments: function(resolve, reject) {
+                try {
+                    const userFolder = this.getUserFolder();
+                    userFolder.listAll().then((result) => {
+                        const docs = [];
+                        const promises = result.prefixes.map((folderRef) => {
+                            return folderRef.listAll().then((files) => {
+                                if (files.items.length > 0) {
+                                    const fileRef = files.items[0];
+                                    return fileRef.getMetadata().then((metadata) => {
+                                        docs.push({
+                                            docId: folderRef.name,
+                                            fileName: metadata.name,
+                                            size: metadata.size,
+                                            timeCreated: metadata.timeCreated,
+                                            fullPath: metadata.fullPath
+                                        });
+                                    }).catch(() => { /* Skip errors */ });
+                                }
+                            }).catch(() => { /* Skip errors */ });
+                        });
+                        
+                        Promise.all(promises).then(() => resolve(docs));
+                    }).catch(reject);
+                } catch (err) {
+                    reject(err);
+                }
             }
         };
         
-        // Initialize file storage
-        FileStorage.init().then(() => {
-            console.log('File storage initialized');
+        // Initialize Firebase Storage on page load
+        FirebaseStorage.init().then(() => {
+            console.log('Firebase Storage ready');
         }).catch(err => {
-            console.error('Failed to initialize file storage:', err);
+            console.warn('Firebase Storage not available:', err.message);
         });
         
         // Load documents from localStorage or use defaults
@@ -3325,7 +3396,7 @@
                     const doc = documentsData.find(function(d) { return d.id === docId; });
                     if (doc) {
                         // Save file to IndexedDB
-                        FileStorage.saveFile(docId, file, doc.name).then(() => {
+                        FirebaseStorage.uploadFile(docId, file, doc.name).then(() => {
                             doc.status = 'uploaded';
                             doc.date = new Date().toISOString().split('T')[0];
                             doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
@@ -3355,7 +3426,7 @@
                 
                 if (doc) {
                     // Save file to IndexedDB
-                    FileStorage.saveFile(doc.id, file, doc.name).then(() => {
+                    FirebaseStorage.uploadFile(doc.id, file, doc.name).then(() => {
                         doc.status = 'uploaded';
                         doc.date = new Date().toISOString().split('T')[0];
                         doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
@@ -3398,7 +3469,7 @@
                     
                     if (doc) {
                         // Save file to IndexedDB
-                        FileStorage.saveFile(doc.id, file, doc.name).then(() => {
+                        FirebaseStorage.uploadFile(doc.id, file, doc.name).then(() => {
                             doc.status = 'uploaded';
                             doc.date = new Date().toISOString().split('T')[0];
                             doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
@@ -3488,21 +3559,13 @@
                 return;
             }
             
-            FileStorage.getFile(docId).then(function(fileData) {
-                if (fileData && fileData.fileData) {
-                    // Create a URL for the file
-                    const file = fileData.fileData;
-                    const fileURL = URL.createObjectURL(file);
-                    
-                    // Open in new tab
-                    window.open(fileURL, '_blank');
-                    showToast('Opening ' + doc.name, 'info');
-                } else {
-                    showToast('Document file not found', 'error');
-                }
+            FirebaseStorage.getFileURL(docId).then(function(fileURL) {
+                // Open in new tab
+                window.open(fileURL, '_blank');
+                showToast('Opening ' + doc.name, 'info');
             }).catch(function(err) {
                 console.error('Error viewing document:', err);
-                showToast('Error opening document', 'error');
+                showToast('Error opening document: ' + err.message, 'error');
             });
         }
         
@@ -3513,31 +3576,21 @@
                 return;
             }
             
-            FileStorage.getFile(docId).then(function(fileData) {
-                if (fileData && fileData.fileData) {
-                    // Create a URL for the file
-                    const file = fileData.fileData;
-                    const fileURL = URL.createObjectURL(file);
-                    
-                    // Create download link
-                    const link = document.createElement('a');
-                    link.href = fileURL;
-                    link.download = fileData.fileName || doc.name + '.pdf';
-                    link.style.display = 'none';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    
-                    // Clean up the URL
-                    setTimeout(() => URL.revokeObjectURL(fileURL), 100);
-                    
-                    showToast('Downloading ' + doc.name, 'success');
-                } else {
-                    showToast('Document file not found', 'error');
-                }
+            FirebaseStorage.getFileURL(docId).then(function(fileURL) {
+                // Create download link
+                const link = document.createElement('a');
+                link.href = fileURL;
+                link.download = doc.name + '.pdf';
+                link.target = '_blank';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast('Downloading ' + doc.name, 'success');
             }).catch(function(err) {
                 console.error('Error downloading document:', err);
-                showToast('Error downloading document', 'error');
+                showToast('Error downloading document: ' + err.message, 'error');
             });
         }
         
@@ -3545,8 +3598,8 @@
             if (confirm('Are you sure you want to delete this document?')) {
                 const doc = documentsData.find(function(d) { return d.id === docId; });
                 if (doc) {
-                    // Delete from IndexedDB
-                    FileStorage.deleteFile(docId).then(function() {
+                    // Delete from Firebase Storage
+                    FirebaseStorage.deleteFile(docId).then(function() {
                         doc.status = 'missing';
                         doc.date = null;
                         doc.size = null;
@@ -3557,7 +3610,11 @@
                         showToast(doc.name + ' deleted.', 'warning');
                     }).catch(function(err) {
                         console.error('Error deleting file:', err);
-                        showToast('Error deleting document', 'error');
+                        showToast('Error deleting document: ' + err.message, 'error');
+                    });
+                }
+            }
+        }
                     });
                 }
             }
