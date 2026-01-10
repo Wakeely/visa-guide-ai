@@ -22,9 +22,6 @@
     <!-- Auth Manager -->
     <script src="auth-manager.js"></script>
     
-    <!-- Document Manager -->
-    <script src="document-manager.js"></script>
-    
     <style>
         /* ============ CSS VARIABLES ============ */
         :root {
@@ -2459,52 +2456,37 @@
         ];
 
         // ============ DOCUMENTS DATA ============
-        let documentsData = [];
-        
-        // Document type mapping for display
-        const documentTypesMap = {
-            'birth_certificate': { name: 'Birth Certificate', type: 'civil', icon: 'certificate' },
-            'passport': { name: 'Passport', type: 'identification', icon: 'id-card' },
-            'i94': { name: 'I-94 Arrival/Departure', type: 'immigration', icon: 'file-contract' },
-            'i797': { name: 'I-797 Approval Notice', type: 'immigration', icon: 'file-contract' },
-            'police_certificate': { name: 'Police Certificates', type: 'civil', icon: 'certificate' },
-            'tax_returns': { name: 'Tax Returns (Last 3 years)', type: 'financial', icon: 'file-invoice-dollar' },
-            'marriage_certificate': { name: 'Marriage Certificate', type: 'civil', icon: 'certificate' },
-            'medical_exam': { name: 'Medical Examination (I-693)', type: 'medical', icon: 'file-medical' }
-        };
-        
-        // Load user documents from Firebase
-        async function loadUserDocuments() {
-            try {
-                documentsData = [];
-                
-                if (typeof DocumentManager !== 'undefined' && DocumentManager.getAllDocuments) {
-                    const docs = await DocumentManager.getAllDocuments();
-                    
-                    // Convert Firebase documents to our format
-                    docs.forEach(function(doc) {
-                        const typeInfo = documentTypesMap[doc.docType] || { name: doc.docType, type: 'other', icon: 'file' };
-                        documentsData.push({
-                            id: doc.docType,
-                            name: typeInfo.name,
-                            type: typeInfo.type,
-                            status: doc.status || 'uploaded',
-                            date: doc.uploadedAt ? DocumentManager.formatDate(doc.uploadedAt) : new Date().toISOString().split('T')[0],
-                            size: doc.fileSize ? DocumentManager.formatFileSize(doc.fileSize) : null,
-                            fileUrl: doc.fileUrl,
-                            storagePath: doc.storagePath
-                        });
+        let documentsData = [
+            { id: 'birth_certificate', name: 'Birth Certificate', type: 'civil', status: 'missing', date: null, size: null },
+            { id: 'passport', name: 'Passport', type: 'identification', status: 'missing', date: null, size: null },
+            { id: 'i94', name: 'I-94 Arrival/Departure', type: 'immigration', status: 'missing', date: null, size: null },
+            { id: 'i797', name: 'I-797 Approval Notice', type: 'immigration', status: 'missing', date: null, size: null },
+            { id: 'police_certificate', name: 'Police Certificates', type: 'civil', status: 'missing', date: null, size: null },
+            { id: 'tax_returns', name: 'Tax Returns (Last 3 years)', type: 'financial', status: 'missing', date: null, size: null },
+            { id: 'marriage_certificate', name: 'Marriage Certificate', type: 'civil', status: 'missing', date: null, size: null },
+            { id: 'medical_exam', name: 'Medical Examination (I-693)', type: 'medical', status: 'missing', date: null, size: null }
+        ];
+
+        // Load documents from localStorage or use defaults
+        function loadDocumentsData() {
+            const savedDocs = localStorage.getItem('documentsData');
+            if (savedDocs) {
+                try {
+                    const parsedDocs = JSON.parse(savedDocs);
+                    // Update documentsData with saved values while preserving structure
+                    parsedDocs.forEach(function(savedDoc) {
+                        const existingDoc = documentsData.find(function(d) { return d.id === savedDoc.id; });
+                        if (existingDoc) {
+                            existingDoc.status = savedDoc.status;
+                            existingDoc.date = savedDoc.date;
+                            existingDoc.size = savedDoc.size;
+                        }
                     });
+                } catch (e) {
+                    console.error('Error loading saved documents:', e);
                 }
-                
-                populateDocuments();
-                updateDocStats();
-            } catch (error) {
-                console.error('Error loading documents:', error);
-                showToast('Error loading documents from storage', 'error');
             }
         }
-        
         // ============ INITIALIZE ============
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
@@ -2526,15 +2508,14 @@
             // Populate forms
             populateForms();
             
-            // Initialize Document Manager and load user documents from Firebase
-            if (typeof DocumentManager !== 'undefined') {
-                DocumentManager.init();
-                loadUserDocuments();
-            } else {
-                console.warn('Document Manager not loaded, using fallback');
-                populateDocuments();
-                updateDocStats();
-            }
+            // Load saved documents from localStorage or use defaults
+            loadDocumentsData();
+            
+            // Populate documents
+            populateDocuments();
+            
+            // Update document stats
+            updateDocStats();
             
             // Load saved form data
             loadFormData();
@@ -3223,38 +3204,19 @@
             input.accept = '.pdf,.jpg,.jpeg,.png,.application/pdf';
             input.style.display = 'none';
             
-            input.onchange = async function(event) {
+            input.onchange = function(event) {
                 const file = event.target.files[0];
                 if (file) {
-                    try {
-                        showToast('Uploading ' + file.name + '...', 'info');
+                    const doc = documentsData.find(function(d) { return d.id === docId; });
+                    if (doc) {
+                        doc.status = 'uploaded';
+                        doc.date = new Date().toISOString().split('T')[0];
+                        doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
                         
-                        // Upload to Firebase via DocumentManager
-                        if (typeof DocumentManager !== 'undefined' && DocumentManager.uploadDocument) {
-                            const result = await DocumentManager.uploadDocument(file, docId);
-                            
-                            if (result.success) {
-                                // Reload documents from Firebase
-                                await loadUserDocuments();
-                                showToast('Document uploaded successfully!', 'success');
-                            }
-                        } else {
-                            // Fallback to mock upload if DocumentManager not available
-                            const doc = documentsData.find(function(d) { return d.id === docId; });
-                            if (doc) {
-                                doc.status = 'uploaded';
-                                doc.date = new Date().toISOString().split('T')[0];
-                                doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-                                
-                                populateDocuments();
-                                updateDocStats();
-                                saveDocumentsData();
-                                showToast(doc.name + ' uploaded successfully!', 'success');
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Upload error:', error);
-                        showToast('Error uploading document: ' + error.message, 'error');
+                        populateDocuments();
+                        updateDocStats();
+                        saveDocumentsData();
+                        showToast(doc.name + ' uploaded successfully!', 'success');
                     }
                 }
             };
@@ -3263,53 +3225,29 @@
             input.click();
             input.remove();
         }
-
-        async function handleFileUpload(event) {
+        
+        function handleFileUpload(event) {
             const files = event.target.files;
             if (files.length > 0) {
                 const file = files[0];
+                const doc = documentsData.find(function(d) { return d.status === 'missing'; });
                 
-                // Find first missing document type
-                const expectedDocs = Object.keys(documentTypesMap);
-                const missingDoc = expectedDocs.find(function(docType) {
-                    return !documentsData.find(function(d) { return d.id === docType && d.status === 'uploaded'; });
-                });
-                
-                if (missingDoc) {
-                    try {
-                        showToast('Uploading ' + file.name + '...', 'info');
-                        
-                        if (typeof DocumentManager !== 'undefined' && DocumentManager.uploadDocument) {
-                            const result = await DocumentManager.uploadDocument(file, missingDoc);
-                            
-                            if (result.success) {
-                                await loadUserDocuments();
-                                showToast('Document uploaded successfully!', 'success');
-                            }
-                        } else {
-                            // Fallback
-                            const doc = documentsData.find(function(d) { return d.id === missingDoc; });
-                            if (doc) {
-                                doc.status = 'uploaded';
-                                doc.date = new Date().toISOString().split('T')[0];
-                                doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-                                
-                                populateDocuments();
-                                updateDocStats();
-                                saveDocumentsData();
-                                showToast(file.name + ' uploaded successfully!', 'success');
-                            }
-                        }
-                    } catch (error) {
-                        showToast('Error uploading: ' + error.message, 'error');
-                    }
+                if (doc) {
+                    doc.status = 'uploaded';
+                    doc.date = new Date().toISOString().split('T')[0];
+                    doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+                    
+                    populateDocuments();
+                    updateDocStats();
+                    saveDocumentsData();
+                    showToast(file.name + ' uploaded successfully!', 'success');
                 } else {
                     showToast('All required documents are already uploaded!', 'warning');
                 }
             }
         }
-
-        async function setupDragDrop() {
+        
+        function setupDragDrop() {
             const uploadArea = document.getElementById('docUploadArea');
             
             uploadArea.addEventListener('dragover', function(e) {
@@ -3322,48 +3260,24 @@
                 uploadArea.classList.remove('dragover');
             });
             
-            uploadArea.addEventListener('drop', async function(e) {
+            uploadArea.addEventListener('drop', function(e) {
                 e.preventDefault();
                 uploadArea.classList.remove('dragover');
                 
                 const files = e.dataTransfer.files;
                 if (files.length > 0) {
                     const file = files[0];
+                    const doc = documentsData.find(function(d) { return d.status === 'missing'; });
                     
-                    // Find first missing document type
-                    const expectedDocs = Object.keys(documentTypesMap);
-                    const missingDoc = expectedDocs.find(function(docType) {
-                        return !documentsData.find(function(d) { return d.id === docType && d.status === 'uploaded'; });
-                    });
-                    
-                    if (missingDoc) {
-                        try {
-                            showToast('Uploading ' + file.name + '...', 'info');
-                            
-                            if (typeof DocumentManager !== 'undefined' && DocumentManager.uploadDocument) {
-                                const result = await DocumentManager.uploadDocument(file, missingDoc);
-                                
-                                if (result.success) {
-                                    await loadUserDocuments();
-                                    showToast('Document uploaded successfully!', 'success');
-                                }
-                            } else {
-                                // Fallback
-                                const doc = documentsData.find(function(d) { return d.id === missingDoc; });
-                                if (doc) {
-                                    doc.status = 'uploaded';
-                                    doc.date = new Date().toISOString().split('T')[0];
-                                    doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-                                    
-                                    populateDocuments();
-                                    updateDocStats();
-                                    saveDocumentsData();
-                                    showToast(file.name + ' uploaded successfully!', 'success');
-                                }
-                            }
-                        } catch (error) {
-                            showToast('Error uploading: ' + error.message, 'error');
-                        }
+                    if (doc) {
+                        doc.status = 'uploaded';
+                        doc.date = new Date().toISOString().split('T')[0];
+                        doc.size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+                        
+                        populateDocuments();
+                        updateDocStats();
+                        saveDocumentsData();
+                        showToast(file.name + ' uploaded successfully!', 'success');
                     } else {
                         showToast('All required documents are already uploaded!', 'warning');
                     }
@@ -3371,66 +3285,35 @@
             });
         }
 
+
         function saveDocumentsData() {
             localStorage.setItem('documentsData', JSON.stringify(documentsData));
         }
 
-        async function viewDocument(docId) {
-            try {
-                if (typeof DocumentManager !== 'undefined' && DocumentManager.viewDocument) {
-                    await DocumentManager.viewDocument(docId);
-                } else {
-                    showToast('Opening document preview...', 'info');
-                }
-            } catch (error) {
-                console.error('View error:', error);
-                showToast('Error viewing document: ' + error.message, 'error');
-            }
+        function viewDocument(docId) {
+            showToast('Opening document preview...', 'info');
         }
-        async function downloadDocument(docId) {
-            try {
-                if (typeof DocumentManager !== 'undefined' && DocumentManager.downloadDocument) {
-                    await DocumentManager.downloadDocument(docId);
-                    showToast('Download started...', 'info');
-                } else {
-                    showToast('Downloading document...', 'info');
-                }
-            } catch (error) {
-                console.error('Download error:', error);
-                showToast('Error downloading document: ' + error.message, 'error');
-            }
+        
+        function downloadDocument(docId) {
+            showToast('Downloading document...', 'info');
         }
-        async function deleteDocument(docId) {
+        
+        function deleteDocument(docId) {
             if (confirm('Are you sure you want to delete this document?')) {
-                try {
-                    if (typeof DocumentManager !== 'undefined' && DocumentManager.deleteDocument) {
-                        const result = await DocumentManager.deleteDocument(docId);
-                        
-                        if (result.success) {
-                            await loadUserDocuments();
-                            showToast('Document deleted successfully.', 'success');
-                        }
-                    } else {
-                        // Fallback
-                        const doc = documentsData.find(function(d) { return d.id === docId; });
-                        if (doc) {
-                            doc.status = 'missing';
-                            doc.date = null;
-                            doc.size = null;
-                            doc.fileUrl = null;
-                            
-                            populateDocuments();
-                            updateDocStats();
-                            saveDocumentsData();
-                            showToast('Document deleted.', 'warning');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Delete error:', error);
-                    showToast('Error deleting document: ' + error.message, 'error');
+                const doc = documentsData.find(function(d) { return d.id === docId; });
+                if (doc) {
+                    doc.status = 'missing';
+                    doc.date = null;
+                    doc.size = null;
+                    
+                    populateDocuments();
+                    updateDocStats();
+                    saveDocumentsData();
+                    showToast('Document deleted.', 'warning');
                 }
             }
         }
+
 
         // ============ COST CALCULATOR ============
         function calculateCost() {
