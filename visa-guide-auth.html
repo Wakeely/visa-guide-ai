@@ -11,8 +11,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-
     
     <!-- Firebase Configuration -->
     <script src="firebase-config.js"></script>
@@ -981,7 +979,19 @@
                         window.location.href = 'visa-guide-dashboard.html';
                     }, 1000);
                 } else {
-                    showAlert('loginAlert', 'danger', result.error?.message || 'Login failed. Please try again.');
+                    // Provide helpful error messages
+                    const errorCode = result.error?.code;
+                    let errorMsg = result.error?.message || 'Login failed. Please try again.';
+                    
+                    if (errorCode === 'auth/invalid-credential' || errorCode === 'auth/wrong-password') {
+                        errorMsg = 'Incorrect password. Please check your password and try again.';
+                    } else if (errorCode === 'auth/user-not-found') {
+                        errorMsg = 'No account found with this email. Please create a new account.';
+                    } else if (errorCode === 'auth/too-many-requests') {
+                        errorMsg = 'Too many failed attempts. Please wait a few minutes and try again.';
+                    }
+                    
+                    showAlert('loginAlert', 'danger', errorMsg);
                     btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
                     btn.disabled = false;
                 }
@@ -1023,11 +1033,25 @@
                 const result = await window.authManager.signUp(email, password, confirmPassword, firstName);
                 
                 if (result.success) {
-                    // Show success modal
-                    document.getElementById('successTitle').textContent = 'Welcome to Visa Guide AI!';
-                    document.getElementById('successMessage').textContent = 
-                        `Hi ${firstName}! Your account has been created successfully. Let's start your immigration journey!`;
-                    document.getElementById('successModal').classList.add('active');
+                    // Show success message briefly
+                    showAlert('registerAlert', 'success', 'Account created! Logging you in...');
+                    
+                    // Automatically log in the user
+                    setTimeout(async () => {
+                        try {
+                            const loginResult = await window.authManager.signIn(email, password);
+                            if (loginResult.success) {
+                                // Redirect to dashboard
+                                window.location.href = 'visa-guide-dashboard.html';
+                            } else {
+                                // If login fails, still redirect to dashboard (account exists)
+                                showAlert('registerAlert', 'success', 'Account created! You can now log in.');
+                            }
+                        } catch (loginError) {
+                            // Even if login fails, account was created
+                            showAlert('registerAlert', 'success', 'Account created! Please log in with your credentials.');
+                        }
+                    }, 1500);
                 } else {
                     showAlert('registerAlert', 'danger', result.error?.message || 'Registration failed. Please try again.');
                 }
