@@ -165,8 +165,20 @@ class AuthManager {
                 throw { code: 'auth/invalid-email', message: 'Please enter a valid email address' };
             }
             
-            if (password.length < 6) {
-                throw { code: 'auth/weak-password', message: 'Password must be at least 6 characters' };
+            // Check password length (must be at least 8)
+            if (password.length < 8) {
+                throw { code: 'auth/weak-password', message: 'Password must be at least 8 characters long' };
+            }
+            
+            // Check for at least one number
+            if (!/\d/.test(password)) {
+                throw { code: 'auth/weak-password', message: 'Password must contain at least one number' };
+            }
+            
+            // Check for at least one special character
+            const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+            if (!specialCharRegex.test(password)) {
+                throw { code: 'auth/weak-password', message: 'Password must contain at least one special character (!@#$%^&*)' };
             }
             
             if (password !== confirmPassword) {
@@ -377,7 +389,7 @@ class AuthManager {
             'auth/email-already-in-use': 'An account with this email already exists',
             'auth/invalid-email': 'Please enter a valid email address',
             'auth/operation-not-allowed': 'This operation is not allowed. Please contact support.',
-            'auth/weak-password': 'Password is too weak. Please use at least 6 characters.',
+            'auth/weak-password': 'Password is too weak. Please use at least 8 characters with numbers and special characters.',
             'auth/user-disabled': 'This account has been disabled. Please contact support.',
             'auth/user-not-found': 'No account found with this email',
             'auth/wrong-password': 'Incorrect password. Please try again.',
