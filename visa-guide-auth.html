@@ -11,8 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-
+    
     <!-- Firebase Configuration -->
     <script src="firebase-config.js"></script>
     
@@ -35,8 +34,8 @@
             --gray-100: #f1f5f9;
             --gray-200: #e2e8f0;
             --gray-300: #cbd5e1;
-            --gray-400: #94a3b8;
-            --gray-500: #64748b;
+            --gray-400: #8;
+            --gray-500: #64748b94a3b;
             --gray-600: #475569;
             --gray-700: #334155;
             --gray-800: #1e293b;
@@ -960,19 +959,13 @@
         // ============ LOGIN HANDLER ============
         async function handleLogin(event) {
             event.preventDefault();
-            async function handleLogin(event) {
-    event.preventDefault();
-    
-    // CHECK IF ALREADY LOGGED IN
-    if (window.authManager.isLoggedIn()) {
-        console.log('User already logged in, redirecting to dashboard...');
-        window.location.href = 'visa-guide-dashboard.html';
-        return;
-    }
-    
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    // ... rest of the function
+            
+            // Check if already logged in - if so, redirect to dashboard
+            if (window.authManager && window.authManager.isLoggedIn()) {
+                console.log('User already logged in, redirecting to dashboard...');
+                window.location.href = 'visa-guide-dashboard.html';
+                return;
+            }
             
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
@@ -981,9 +974,9 @@
             const btn = document.getElementById('loginBtn');
             btn.innerHTML = '<div class="spinner"></div> Signing in...';
             btn.disabled = true;
+            clearAlert('loginAlert');
             
             try {
-                // Use real Firebase Auth
                 const result = await window.authManager.signIn(email, password);
                 
                 if (result.success) {
@@ -993,16 +986,18 @@
                         window.location.href = 'visa-guide-dashboard.html';
                     }, 1000);
                 } else {
-                    // Provide helpful error messages
+                    // Handle specific Firebase error codes
                     const errorCode = result.error?.code;
-                    let errorMsg = result.error?.message || 'Login failed. Please try again.';
+                    let errorMsg = result.error?.message || 'An error occurred. Please try again.';
                     
                     if (errorCode === 'auth/invalid-credential' || errorCode === 'auth/wrong-password') {
-                        errorMsg = 'Incorrect password. Please check your password and try again.';
+                        errorMsg = 'Incorrect email or password. Please check your credentials and try again.';
                     } else if (errorCode === 'auth/user-not-found') {
                         errorMsg = 'No account found with this email. Please create a new account.';
                     } else if (errorCode === 'auth/too-many-requests') {
                         errorMsg = 'Too many failed attempts. Please wait a few minutes and try again.';
+                    } else if (errorCode === 'auth/network-request-failed') {
+                        errorMsg = 'Network error. Please check your internet connection.';
                     }
                     
                     showAlert('loginAlert', 'danger', errorMsg);
@@ -1010,6 +1005,7 @@
                     btn.disabled = false;
                 }
             } catch (error) {
+                console.error('Login exception:', error);
                 showAlert('loginAlert', 'danger', 'An error occurred. Please try again.');
                 btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
                 btn.disabled = false;
@@ -1041,40 +1037,30 @@
             const btn = document.getElementById('registerBtn');
             btn.innerHTML = '<div class="spinner"></div> Creating account...';
             btn.disabled = true;
+            clearAlert('registerAlert');
             
             try {
-                // Use real Firebase Auth
                 const result = await window.authManager.signUp(email, password, confirmPassword, firstName);
                 
                 if (result.success) {
-                    // Show success message briefly
-                    showAlert('registerAlert', 'success', 'Account created! Logging you in...');
+                    // Account created successfully!
+                    showAlert('registerAlert', 'success', 'Account created! Redirecting to your dashboard...');
                     
-                    // Automatically log in the user
-                    setTimeout(async () => {
-                        try {
-                            const loginResult = await window.authManager.signIn(email, password);
-                            if (loginResult.success) {
-                                // Redirect to dashboard
-                                window.location.href = 'visa-guide-dashboard.html';
-                            } else {
-                                // If login fails, still redirect to dashboard (account exists)
-                                showAlert('registerAlert', 'success', 'Account created! You can now log in.');
-                            }
-                        } catch (loginError) {
-                            // Even if login fails, account was created
-                            showAlert('registerAlert', 'success', 'Account created! Please log in with your credentials.');
-                        }
+                    // Redirect to dashboard - the onAuthStateChanged will handle the login state
+                    setTimeout(() => {
+                        window.location.href = 'visa-guide-dashboard.html';
                     }, 1500);
                 } else {
                     showAlert('registerAlert', 'danger', result.error?.message || 'Registration failed. Please try again.');
+                    btn.innerHTML = '<i class="fas fa-user-plus"></i> Create My Free Account';
+                    btn.disabled = false;
                 }
             } catch (error) {
+                console.error('Registration exception:', error);
                 showAlert('registerAlert', 'danger', 'An error occurred. Please try again.');
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> Create My Free Account';
+                btn.disabled = false;
             }
-            
-            btn.innerHTML = '<i class="fas fa-user-plus"></i> Create My Free Account';
-            btn.disabled = false;
         }
 
         // ============ SOCIAL LOGIN ============
@@ -1176,6 +1162,7 @@
         console.log('Module: User Authentication System v1.0');
         
         // Initialize Firebase and Auth Manager when DOM is ready
+        // Also check if user is already logged in and redirect to dashboard
         document.addEventListener('DOMContentLoaded', async () => {
             // Initialize Firebase if not already done
             if (typeof FirebaseCore !== 'undefined' && !FirebaseCore.isInitialized()) {
@@ -1185,6 +1172,14 @@
             
             // AuthManager will auto-initialize when DOM is ready
             console.log('AuthManager ready for use');
+            
+            // Check if user is already logged in after a short delay
+            setTimeout(() => {
+                if (window.authManager && window.authManager.isLoggedIn()) {
+                    console.log('User already logged in on page load, redirecting to dashboard...');
+                    window.location.href = 'visa-guide-dashboard.html';
+                }
+            }, 1000);
         });
     </script>
 </body>
