@@ -684,6 +684,152 @@
             background: #059669;
         }
 
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        /* ============ REVIEW SECTION ============ */
+        .review-container {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .review-section {
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .review-section {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+        }
+
+        .review-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        [data-theme="dark"] .review-section-header {
+            border-color: var(--gray-300);
+        }
+
+        .review-section-header h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .review-section-header .edit-btn {
+            font-size: 0.8125rem;
+            color: var(--primary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-weight: 600;
+        }
+
+        .review-section-header .edit-btn:hover {
+            text-decoration: underline;
+        }
+
+        .review-item {
+            display: flex;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        [data-theme="dark"] .review-item {
+            border-color: var(--gray-300);
+        }
+
+        .review-item:last-child {
+            border-bottom: none;
+        }
+
+        .review-label {
+            flex: 1;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        [data-theme="dark"] .review-label {
+            color: var(--gray-400);
+        }
+
+        .review-value {
+            flex: 2;
+            font-size: 0.875rem;
+            color: var(--gray-800);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        [data-theme="dark"] .review-value {
+            color: var(--gray-100);
+        }
+
+        .review-value.empty {
+            color: var(--gray-400);
+            font-style: italic;
+        }
+
+        /* ============ SUBMIT SECTION ============ */
+        .submit-section {
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            border: 2px solid var(--success);
+            text-align: center;
+        }
+
+        [data-theme="dark"] .submit-section {
+            background: var(--gray-200);
+        }
+
+        .submit-section h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        [data-theme="dark"] .submit-section h3 {
+            color: var(--gray-100);
+        }
+
+        .submit-section p {
+            color: var(--gray-600);
+            margin-bottom: 1.5rem;
+        }
+
+        [data-theme="dark"] .submit-section p {
+            color: var(--gray-400);
+        }
+
+        .submit-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
         /* ============ DOCUMENT MANAGER ============ */
         .doc-stats {
             display: grid;
@@ -1320,6 +1466,11 @@
             }
         }
 
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
+
         .toast.success {
             border-left: 4px solid var(--success);
         }
@@ -1406,6 +1557,15 @@
 
             .toast {
                 min-width: auto;
+            }
+
+            .submit-actions {
+                flex-direction: column;
+            }
+
+            .submit-actions .btn {
+                width: 100%;
+                justify-content: center;
             }
         }
 
@@ -1744,25 +1904,176 @@
                     <!-- Step 6: Review -->
                     <div class="form-section" id="step6">
                         <h3><i class="fas fa-check-circle"></i> Part 6 - Review Your Information</h3>
-                        <div class="cost-summary" style="text-align: center;">
-                            <p style="color: var(--gray-600); padding: 2rem;">
-                                <i class="fas fa-file-signature" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary);"></i><br>
-                                Please review all information before submitting.<br>
-                                <strong>Your progress: <span id="reviewProgress">0%</span></strong>
-                            </p>
-                        </div>
-                        <div style="text-align: center; display: flex; gap: 1rem; justify-content: center;">
-                            <button class="btn btn-success" onclick="saveFormProgress()">
-                                <i class="fas fa-save"></i> Save Progress
-                            </button>
-                            <button class="btn btn-primary" onclick="completeForm()" style="margin-left: 0;">
-                                <i class="fas fa-check"></i> Mark as Complete
-                            </button>
+                        
+                        <!-- Review Content -->
+                        <div class="review-container" id="reviewContent">
+                            <!-- Basic Information Review -->
+                            <div class="review-section">
+                                <div class="review-section-header">
+                                    <h4><i class="fas fa-user"></i> Basic Information</h4>
+                                    <button class="edit-btn" onclick="goToStep(1)">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Full Name</span>
+                                    <span class="review-value" id="reviewFullName">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Middle Name</span>
+                                    <span class="review-value" id="reviewMiddleName">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Date of Birth</span>
+                                    <span class="review-value" id="reviewDob">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Country of Birth</span>
+                                    <span class="review-value" id="reviewBirthCountry">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Country of Nationality</span>
+                                    <span class="review-value" id="reviewNationality">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">A-Number</span>
+                                    <span class="review-value" id="reviewANumber">Not provided</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Eligibility Review -->
+                            <div class="review-section">
+                                <div class="review-section-header">
+                                    <h4><i class="fas fa-clipboard-check"></i> Eligibility</h4>
+                                    <button class="edit-btn" onclick="goToStep(2)">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Applying Basis</span>
+                                    <span class="review-value" id="reviewEligibility">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Communist Party Affiliation</span>
+                                    <span class="review-value" id="reviewCommunist">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Criminal Charges</span>
+                                    <span class="review-value" id="reviewCriminal">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Criminal Details</span>
+                                    <span class="review-value" id="reviewCriminalDetails">Not provided</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Residence Review -->
+                            <div class="review-section">
+                                <div class="review-section-header">
+                                    <h4><i class="fas fa-home"></i> Residence</h4>
+                                    <button class="edit-btn" onclick="goToStep(3)">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Current Address</span>
+                                    <span class="review-value" id="reviewAddress">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">City, State, ZIP</span>
+                                    <span class="review-value" id="reviewCityStateZip">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">County</span>
+                                    <span class="review-value" id="reviewCounty">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Date of Arrival in U.S.</span>
+                                    <span class="review-value" id="reviewArrivalDate">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Countries Lived (Past 5 Years)</span>
+                                    <span class="review-value" id="reviewCountriesLived">Not provided</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Employment Review -->
+                            <div class="review-section">
+                                <div class="review-section-header">
+                                    <h4><i class="fas fa-briefcase"></i> Employment</h4>
+                                    <button class="edit-btn" onclick="goToStep(4)">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Current Employer</span>
+                                    <span class="review-value" id="reviewEmployer">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Occupation</span>
+                                    <span class="review-value" id="reviewOccupation">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Employment History</span>
+                                    <span class="review-value" id="reviewEmploymentHistory">Not provided</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Family Review -->
+                            <div class="review-section">
+                                <div class="review-section-header">
+                                    <h4><i class="fas fa-users"></i> Family Information</h4>
+                                    <button class="edit-btn" onclick="goToStep(5)">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Marital Status</span>
+                                    <span class="review-value" id="reviewMaritalStatus">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Spouse Name</span>
+                                    <span class="review-value" id="reviewSpouseName">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Spouse DOB</span>
+                                    <span class="review-value" id="reviewSpouseDob">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Date of Marriage</span>
+                                    <span class="review-value" id="reviewMarriageDate">Not provided</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Previous Spouses</span>
+                                    <span class="review-value" id="reviewPreviousSpouses">None</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Children</span>
+                                    <span class="review-value" id="reviewChildren">None</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Section -->
+                            <div class="submit-section">
+                                <h3><i class="fas fa-paper-plane"></i> Ready to Submit?</h3>
+                                <p>Please review all information above carefully. Once submitted, you cannot make changes online. You may need to contact USCIS for any corrections.</p>
+                                <div class="submit-actions">
+                                    <button class="btn btn-secondary" onclick="saveFormProgress()">
+                                        <i class="fas fa-save"></i> Save Draft
+                                    </button>
+                                    <button class="btn btn-warning" onclick="generatePDF()">
+                                        <i class="fas fa-file-pdf"></i> Download PDF
+                                    </button>
+                                    <button class="btn btn-success" onclick="submitForm()">
+                                        <i class="fas fa-paper-plane"></i> Submit Application
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="form-actions">
+                <div class="form-actions" id="formActions">
                     <button class="btn btn-secondary" onclick="previousStep()" id="prevBtn">
                         <i class="fas fa-arrow-left"></i> Previous
                     </button>
@@ -2216,6 +2527,11 @@
 
         // ============ INTERACTIVE FORM ============
         function goToStep(step) {
+            // If going to review step (6), populate review data first
+            if (step === 6) {
+                populateReviewData();
+            }
+            
             // Hide current section
             document.getElementById('step' + currentStep).classList.remove('active');
             
@@ -2228,7 +2544,7 @@
             // Update step indicators
             updateStepIndicators();
             
-            // Update navigation buttons
+            // Update navigation buttons and actions
             updateNavButtons();
             
             // Update progress display
@@ -2238,10 +2554,6 @@
         function nextStep() {
             if (currentStep < totalSteps) {
                 goToStep(currentStep + 1);
-            } else {
-                // On last step, save and show completion
-                saveFormProgress();
-                showToast('Form review complete! You can now submit your application.', 'success');
             }
         }
 
@@ -2266,23 +2578,131 @@
         function updateNavButtons() {
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
+            const formActions = document.getElementById('formActions');
             
-            prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
-            nextBtn.innerHTML = currentStep === totalSteps ? 
-                '<i class="fas fa-check"></i> Submit' : 
-                'Next <i class="fas fa-arrow-right"></i>';
+            // Hide navigation buttons on review step
+            if (currentStep === totalSteps) {
+                formActions.style.display = 'none';
+            } else {
+                formActions.style.display = 'flex';
+                prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+                nextBtn.innerHTML = currentStep === totalSteps - 1 ? 
+                    'Review <i class="fas fa-arrow-right"></i>' : 
+                    'Next <i class="fas fa-arrow-right"></i>';
+            }
         }
 
         function updateProgressDisplay() {
             const progress = Math.round((currentStep / totalSteps) * 100);
             document.getElementById('formProgress').textContent = 'Progress: ' + progress + '%';
-            
-            if (currentStep === totalSteps) {
-                document.getElementById('reviewProgress').textContent = progress + '%';
-            }
         }
 
-        // ============ FORM DATA ============
+        // ============ REVIEW FUNCTIONALITY ============
+        function populateReviewData() {
+            // Basic Information
+            const firstName = document.getElementById('firstName').value || 'Not provided';
+            const lastName = document.getElementById('lastName').value || 'Not provided';
+            document.getElementById('reviewFullName').textContent = firstName + ' ' + lastName;
+            document.getElementById('reviewFullName').classList.remove('empty');
+            
+            document.getElementById('reviewMiddleName').textContent = document.getElementById('middleName').value || 'Not provided';
+            document.getElementById('reviewMiddleName').classList.remove('empty');
+            
+            document.getElementById('reviewDob').textContent = formatDateInput(document.getElementById('dob').value);
+            document.getElementById('reviewDob').classList.remove('empty');
+            
+            document.getElementById('reviewBirthCountry').textContent = document.getElementById('birthCountry').value || 'Not provided';
+            document.getElementById('reviewBirthCountry').classList.remove('empty');
+            
+            document.getElementById('reviewNationality').textContent = document.getElementById('nationality').value || 'Not provided';
+            document.getElementById('reviewNationality').classList.remove('empty');
+            
+            document.getElementById('reviewANumber').textContent = document.getElementById('aNumber').value || 'Not provided';
+            document.getElementById('reviewANumber').classList.remove('empty');
+            
+            // Eligibility
+            const eligibilityMap = {
+                '5years': '5 years as Lawful Permanent Resident',
+                '3years': '3 years as LPR married to U.S. citizen',
+                'uscis': 'U.S. citizen through parents',
+                'military': 'Military provisions'
+            };
+            document.getElementById('reviewEligibility').textContent = eligibilityMap[document.getElementById('eligibilityBasis').value] || 'Not provided';
+            document.getElementById('reviewEligibility').classList.remove('empty');
+            
+            const communistMap = { 'no': 'No', 'yes': 'Yes' };
+            document.getElementById('reviewCommunist').textContent = communistMap[document.getElementById('communistParty').value] || 'Not provided';
+            document.getElementById('reviewCommunist').classList.remove('empty');
+            
+            const criminalMap = { 'no': 'No', 'yes': 'Yes' };
+            document.getElementById('reviewCriminal').textContent = criminalMap[document.getElementById('criminalCharges').value] || 'Not provided';
+            document.getElementById('reviewCriminal').classList.remove('empty');
+            
+            document.getElementById('reviewCriminalDetails').textContent = document.getElementById('criminalDetails').value || 'None';
+            document.getElementById('reviewCriminalDetails').classList.remove('empty');
+            
+            // Residence
+            document.getElementById('reviewAddress').textContent = document.getElementById('currentAddress').value || 'Not provided';
+            document.getElementById('reviewAddress').classList.remove('empty');
+            
+            const city = document.getElementById('currentCity').value || 'Not provided';
+            const state = document.getElementById('currentState').value || 'Not provided';
+            const zip = document.getElementById('currentZip').value || 'Not provided';
+            document.getElementById('reviewCityStateZip').textContent = city + ', ' + state + ' ' + zip;
+            document.getElementById('reviewCityStateZip').classList.remove('empty');
+            
+            document.getElementById('reviewCounty').textContent = document.getElementById('currentCounty').value || 'Not provided';
+            document.getElementById('reviewCounty').classList.remove('empty');
+            
+            document.getElementById('reviewArrivalDate').textContent = formatDateInput(document.getElementById('arrivalDate').value);
+            document.getElementById('reviewArrivalDate').classList.remove('empty');
+            
+            document.getElementById('reviewCountriesLived').textContent = document.getElementById('countriesLived').value || 'None';
+            document.getElementById('reviewCountriesLived').classList.remove('empty');
+            
+            // Employment
+            document.getElementById('reviewEmployer').textContent = document.getElementById('employer').value || 'Not provided';
+            document.getElementById('reviewEmployer').classList.remove('empty');
+            
+            document.getElementById('reviewOccupation').textContent = document.getElementById('occupation').value || 'Not provided';
+            document.getElementById('reviewOccupation').classList.remove('empty');
+            
+            document.getElementById('reviewEmploymentHistory').textContent = document.getElementById('employmentHistory').value || 'Not provided';
+            document.getElementById('reviewEmploymentHistory').classList.remove('empty');
+            
+            // Family
+            const maritalMap = {
+                'single': 'Single (never married)',
+                'married': 'Married',
+                'divorced': 'Divorced',
+                'widowed': 'Widowed',
+                'separated': 'Legally Separated'
+            };
+            document.getElementById('reviewMaritalStatus').textContent = maritalMap[document.getElementById('maritalStatus').value] || 'Not provided';
+            document.getElementById('reviewMaritalStatus').classList.remove('empty');
+            
+            document.getElementById('reviewSpouseName').textContent = document.getElementById('spouseName').value || 'Not applicable';
+            document.getElementById('reviewSpouseName').classList.remove('empty');
+            
+            document.getElementById('reviewSpouseDob').textContent = formatDateInput(document.getElementById('spouseDob').value) || 'Not applicable';
+            document.getElementById('reviewSpouseDob').classList.remove('empty');
+            
+            document.getElementById('reviewMarriageDate').textContent = formatDateInput(document.getElementById('marriageDate').value) || 'Not applicable';
+            document.getElementById('reviewMarriageDate').classList.remove('empty');
+            
+            document.getElementById('reviewPreviousSpouses').textContent = document.getElementById('previousSpouses').value || 'None';
+            document.getElementById('reviewPreviousSpouses').classList.remove('empty');
+            
+            document.getElementById('reviewChildren').textContent = document.getElementById('childrenInfo').value || 'None';
+            document.getElementById('reviewChildren').classList.remove('empty');
+        }
+
+        function formatDateInput(dateStr) {
+            if (!dateStr) return 'Not provided';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
         function saveFormProgress() {
             const formData = {
                 step1: {
@@ -2331,7 +2751,6 @@
                 lastSaved: new Date().toISOString()
             };
             
-            // Save to localStorage
             localStorage.setItem('n400FormData', JSON.stringify(formData));
             
             // Update N-400 form progress
@@ -2342,7 +2761,6 @@
                 n400Form.status = n400Form.progress === 100 ? 'completed' : 'in-progress';
             }
             
-            // Refresh forms display
             document.getElementById('formsGrid').innerHTML = '';
             populateForms();
             
@@ -2355,7 +2773,7 @@
                 try {
                     const formData = JSON.parse(savedData);
                     
-                    // Load step 1
+                    // Load all steps data
                     if (formData.step1) {
                         document.getElementById('lastName').value = formData.step1.lastName || '';
                         document.getElementById('firstName').value = formData.step1.firstName || '';
@@ -2366,7 +2784,6 @@
                         document.getElementById('aNumber').value = formData.step1.aNumber || '';
                     }
                     
-                    // Load step 2
                     if (formData.step2) {
                         document.getElementById('eligibilityBasis').value = formData.step2.eligibilityBasis || '';
                         document.getElementById('communistParty').value = formData.step2.communistParty || '';
@@ -2374,7 +2791,6 @@
                         document.getElementById('criminalDetails').value = formData.step2.criminalDetails || '';
                     }
                     
-                    // Load step 3
                     if (formData.step3) {
                         document.getElementById('currentAddress').value = formData.step3.currentAddress || '';
                         document.getElementById('currentCity').value = formData.step3.currentCity || '';
@@ -2385,7 +2801,6 @@
                         document.getElementById('countriesLived').value = formData.step3.countriesLived || '';
                     }
                     
-                    // Load step 4
                     if (formData.step4) {
                         document.getElementById('employer').value = formData.step4.employer || '';
                         document.getElementById('occupation').value = formData.step4.occupation || '';
@@ -2395,7 +2810,6 @@
                         document.getElementById('employmentHistory').value = formData.step4.employmentHistory || '';
                     }
                     
-                    // Load step 5
                     if (formData.step5) {
                         document.getElementById('maritalStatus').value = formData.step5.maritalStatus || '';
                         document.getElementById('spouseName').value = formData.step5.spouseName || '';
@@ -2407,12 +2821,10 @@
                         document.getElementById('childrenInfo').value = formData.step5.childrenInfo || '';
                     }
                     
-                    // Go to saved step
                     if (formData.currentStep) {
                         goToStep(formData.currentStep);
                     }
                     
-                    // Show last saved message
                     if (formData.lastSaved) {
                         const lastSaved = new Date(formData.lastSaved);
                         showToast('Resumed from last save: ' + lastSaved.toLocaleDateString(), 'info');
@@ -2423,9 +2835,34 @@
             }
         }
 
-        function completeForm() {
-            saveFormProgress();
-            showToast('Congratulations! Form N-400 marked as complete.', 'success');
+        function generatePDF() {
+            showToast('Generating PDF... This may take a moment.', 'info');
+            // In a real app, this would generate a PDF using a library like jsPDF
+            setTimeout(function() {
+                showToast('PDF generation would download your application here.', 'success');
+            }, 2000);
+        }
+
+        function submitForm() {
+            if (confirm('Are you sure you want to submit your N-400 application? This action cannot be undone.')) {
+                saveFormProgress();
+                
+                // Mark as completed
+                const n400Form = formsData.find(f => f.id === 'n400');
+                if (n400Form) {
+                    n400Form.status = 'completed';
+                    n400Form.progress = 100;
+                }
+                document.getElementById('formsGrid').innerHTML = '';
+                populateForms();
+                
+                showToast('Congratulations! Your N-400 application has been submitted successfully!', 'success');
+                
+                // Redirect to forms list after 3 seconds
+                setTimeout(function() {
+                    switchTab('forms');
+                }, 3000);
+            }
         }
 
         // ============ DOCUMENTS ============
@@ -2492,7 +2929,6 @@
         }
 
         function uploadSingleDocument(docId) {
-            // Create a temporary file input for this document
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '.pdf,.jpg,.jpeg,.png';
@@ -2521,7 +2957,6 @@
         function handleFileUpload(event) {
             const files = event.target.files;
             if (files.length > 0) {
-                // Simulate upload for first file
                 const file = files[0];
                 const doc = documentsData.find(function(d) { return d.status === 'missing'; });
                 
@@ -2620,7 +3055,6 @@
             let premiumFee = 0;
             let servicesFee = 0;
             
-            // Base filing fees
             if (form === 'n400') {
                 filingFee = 640;
                 biometricsFee = 85;
@@ -2636,26 +3070,22 @@
                 filingFee = 585;
             }
             
-            // Premium processing
             if (premium === 'yes' && (form === 'i140' || form === 'i485')) {
                 premiumFee = 2500;
             }
             
-            // Additional services
             if (translation) servicesFee += 100;
             if (notary) servicesFee += 50;
             
-            // Calculate totals
             let subtotal = filingFee + biometricsFee + premiumFee + servicesFee;
             let waiverSavings = 0;
             
             if (waiver === 'yes') {
-                waiverSavings = Math.floor(subtotal * 0.5); // 50% waiver
+                waiverSavings = Math.floor(subtotal * 0.5);
             }
             
             let total = subtotal - waiverSavings;
             
-            // Update display
             document.getElementById('totalAmount').textContent = '$' + total.toLocaleString();
             document.getElementById('filingFee').textContent = '$' + filingFee.toLocaleString();
             document.getElementById('biometricsFee').textContent = '$' + biometricsFee.toLocaleString();
@@ -2713,7 +3143,6 @@
             
             container.appendChild(toast);
             
-            // Auto remove after 5 seconds
             setTimeout(function() {
                 if (toast.parentElement) {
                     toast.style.animation = 'fadeOut 0.3s ease forwards';
@@ -2725,7 +3154,7 @@
         }
 
         console.log('Visa Guide AI - Forms Center loaded successfully');
-        console.log('Features: Interactive Forms, Document Manager, Cost Calculator, Timeline');
+        console.log('Features: Interactive Forms with Review, Document Manager, Cost Calculator, Timeline');
     </script>
 </body>
 </html>
