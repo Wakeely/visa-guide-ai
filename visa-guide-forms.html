@@ -2568,6 +2568,9 @@
             // Load saved form data
             loadFormData();
             
+            // Load saved documents data
+            loadDocumentsData();
+            
             // Initialize Firebase Storage
             FirebaseStorage.init();
             
@@ -3384,24 +3387,113 @@
         }
 
         function saveDocumentsData() {
-            localStorage.setItem('documentsData', JSON.stringify(documentsData));
+            try {
+                localStorage.setItem('documentsData', JSON.stringify(documentsData));
+            } catch (e) {
+                console.warn('Could not save documents data to localStorage:', e);
+            }
+        }
+        
+        function loadDocumentsData() {
+            try {
+                const savedData = localStorage.getItem('documentsData');
+                if (savedData) {
+                    const parsedData = JSON.parse(savedData);
+                    if (Array.isArray(parsedData) && parsedData.length > 0) {
+                        documentsData = parsedData;
+                        populateDocuments();
+                        updateDocStats();
+                        console.log('Loaded ' + documentsData.filter(d => d.status === 'uploaded').length + ' uploaded documents');
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not load documents data from localStorage:', e);
+            }
         }
 
         function viewDocument(docId) {
             const doc = documentsData.find(function(d) { return d.id === docId; });
-            if (doc && doc.url) {
-                if (doc.url.startsWith('data:')) {
-                    const newWindow = window.open('', '_blank');
-                    if (newWindow) {
-                        newWindow.document.write('<html><head><title>' + doc.name + '</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#f0f0f0;"><img src="' + doc.url + '" style="max-width:90%;max-height:90%;box-shadow:0 4px 12px rgba(0,0,0,0.15);"/></body></html>');
-                        newWindow.document.close();
-                    }
+            
+            if (!doc) {
+                showToast('Document not found.', 'error');
+                return;
+            }
+            
+            if (!doc.url) {
+                showToast('Document not available. Please upload first.', 'warning');
+                return;
+            }
+            
+            showToast('Opening document...', 'info');
+            
+            const fileName = doc.fileName || doc.name + '.pdf';
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+            
+            // Create a preview window with better handling
+            const previewWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
+            
+            if (!previewWindow) {
+                // Popup blocked, try alternative
+                showToast('Please allow popups to view documents.', 'warning');
+                return;
+            }
+            
+            let content = '';
+            
+            if (doc.url.startsWith('data:')) {
+                // Local base64 file - display based on type
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
+                    content = '<div style="display:flex;flex-direction:column;align-items:center;padding:20px;height:100vh;background:#f5f5f5;">' +
+                        '<h2 style="color:#333;margin-bottom:20px;">' + doc.name + '</h2>' +
+                        '<img src="' + doc.url + '" style="max-width:100%;max-height:70vh;box-shadow:0 4px 20px rgba(0,0,0,0.15);border-radius:8px;"/>' +
+                        '<p style="margin-top:20px;color:#666;">Right-click image and select "Save image as..." to download</p>' +
+                        '</div>';
+                } else if (fileExtension === 'pdf') {
+                    content = '<div style="display:flex;flex-direction:column;align-items:center;padding:20px;height:100vh;background:#f5f5f5;">' +
+                        '<h2 style="color:#333;margin-bottom:20px;">' + doc.name + '</h2>' +
+                        '<iframe src="' + doc.url + '" style="width:100%;height:80vh;border:none;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);"></iframe>' +
+                        '</div>';
                 } else {
-                    window.open(doc.url, '_blank');
+                    content = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f5f5f5;font-family:sans-serif;">' +
+                        '<div style="background:white;padding:40px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);text-align:center;">' +
+                        '<i class="fas fa-file" style="font-size:64px;color:#3b82f6;margin-bottom:20px;"></i>' +
+                        '<h2 style="color:#333;margin-bottom:10px;">' + doc.name + '</h2>' +
+                        '<p style="color:#666;margin-bottom:20px;">File type: ' + fileExtension.toUpperCase() + '</p>' +
+                        '<p style="color:#666;margin-bottom:30px;">This file type can be downloaded but not previewed directly.</p>' +
+                        '<button onclick="window.opener.downloadDocument(' + docId + ');" style="background:#3b82f6;color:white;border:none;padding:12px 24px;border-radius:6px;cursor:pointer;font-size:16px;">Download File</button>' +
+                        '</div></div>';
                 }
             } else {
-                showToast('Document not available. Please upload first.', 'warning');
+                // Firebase or external URL - try to embed or open
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
+                    content = '<div style="display:flex;flex-direction:column;align-items:center;padding:20px;height:100vh;background:#f5f5f5;">' +
+                        '<h2 style="color:#333;margin-bottom:20px;">' + doc.name + '</h2>' +
+                        '<img src="' + doc.url + '" style="max-width:100%;max-height:70vh;box-shadow:0 4px 20px rgba(0,0,0,0.15);border-radius:8px;"/>' +
+                        '<p style="margin-top:20px;color:#666;">Right-click image and select "Save image as..." to download</p>' +
+                        '</div>';
+                } else if (fileExtension === 'pdf') {
+                    content = '<div style="display:flex;flex-direction:column;align-items:center;padding:20px;height:100vh;background:#f5f5f5;">' +
+                        '<h2 style="color:#333;margin-bottom:20px;">' + doc.name + '</h2>' +
+                        '<iframe src="' + doc.url + '" style="width:100%;height:80vh;border:none;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);"></iframe>' +
+                        '</div>';
+                } else {
+                    // For other file types, show download option
+                    content = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f5f5f5;font-family:sans-serif;">' +
+                        '<div style="background:white;padding:40px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);text-align:center;">' +
+                        '<i class="fas fa-cloud-download-alt" style="font-size:64px;color:#3b82f6;margin-bottom:20px;"></i>' +
+                        '<h2 style="color:#333;margin-bottom:10px;">' + doc.name + '</h2>' +
+                        '<p style="color:#666;margin-bottom:20px;">Click below to open or download this document</p>' +
+                        '<a href="' + doc.url + '" target="_blank" style="display:inline-block;background:#3b82f6;color:white;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:16px;margin-right:10px;">Open Document</a>' +
+                        '<button onclick="window.opener.downloadDocument(' + docId + ');" style="background:#10b981;color:white;border:none;padding:12px 24px;border-radius:6px;cursor:pointer;font-size:16px;">Download</button>' +
+                        '</div></div>';
+                }
             }
+            
+            previewWindow.document.write('<!DOCTYPE html><html><head><title>' + doc.name + ' - Visa Guide AI</title>' +
+                '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">' +
+                '<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Inter,sans-serif;}</style>' +
+                '</head><body>' + content + '</body></html>');
+            previewWindow.document.close();
         }
 
         function downloadDocument(docId) {
