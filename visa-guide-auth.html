@@ -970,6 +970,14 @@
             btn.disabled = true;
             
             try {
+                // Wait for authManager to be ready
+                if (!window.authManager) {
+                    throw new Error('Authentication system not ready. Please refresh the page.');
+                }
+                
+                // Ensure auth manager is initialized
+                await window.authManager.ensureInitialized();
+                
                 // Use real Firebase Auth
                 const result = await window.authManager.signIn(email, password);
                 
@@ -990,6 +998,8 @@
                         errorMsg = 'No account found with this email. Please create a new account.';
                     } else if (errorCode === 'auth/too-many-requests') {
                         errorMsg = 'Too many failed attempts. Please wait a few minutes and try again.';
+                    } else if (errorCode === 'auth/network-request-failed') {
+                        errorMsg = 'Network error. Please check your internet connection and try again.';
                     }
                     
                     showAlert('loginAlert', 'danger', errorMsg);
@@ -997,7 +1007,8 @@
                     btn.disabled = false;
                 }
             } catch (error) {
-                showAlert('loginAlert', 'danger', 'An error occurred. Please try again.');
+                console.error('Login error:', error);
+                showAlert('loginAlert', 'danger', 'An error occurred: ' + (error.message || 'Please try again.'));
                 btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
                 btn.disabled = false;
             }
