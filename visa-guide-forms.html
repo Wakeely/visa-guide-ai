@@ -3395,7 +3395,7 @@
                 if (file) {
                     const doc = documentsData.find(function(d) { return d.id === docId; });
                     if (doc) {
-                        // Save file to IndexedDB
+                        // Upload file to Firebase Storage
                         FirebaseStorage.uploadFile(docId, file, doc.name).then(() => {
                             doc.status = 'uploaded';
                             doc.date = new Date().toISOString().split('T')[0];
@@ -3425,7 +3425,7 @@
                 const doc = documentsData.find(function(d) { return d.status === 'missing'; });
                 
                 if (doc) {
-                    // Save file to IndexedDB
+                    // Upload file to Firebase Storage
                     FirebaseStorage.uploadFile(doc.id, file, doc.name).then(() => {
                         doc.status = 'uploaded';
                         doc.date = new Date().toISOString().split('T')[0];
@@ -3468,7 +3468,7 @@
                     const doc = documentsData.find(function(d) { return d.status === 'missing'; });
                     
                     if (doc) {
-                        // Save file to IndexedDB
+                        // Upload file to Firebase Storage
                         FirebaseStorage.uploadFile(doc.id, file, doc.name).then(() => {
                             doc.status = 'uploaded';
                             doc.date = new Date().toISOString().split('T')[0];
